@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>算法测试实例</title>
+    <link rel="stylesheet" href="../../static/css/element-ui@2.13.0-theme-chalk-index.css" />
+</head>
+
+<body>
+    <div id="app">
+        <el-header>
+            <h2>展示模块</h2>
+        </el-header>
+
+        <el-main>
+            <el-form ref="form" :model="formData" label-width="120px">
+                <el-form-item label="安全等级">
+                    <div style="display: flex; align-items: center">
+                        <el-select v-model="formData.security" placeholder="选择安全等级" style="flex: 1">
+                            <el-option label="128bit" value="128"></el-option>
+                            <el-option label="192bit" value="192"></el-option>
+                            <el-option label="256bit" value="256"></el-option>
+                            <el-option label="384bit" value="384"></el-option>
+                        </el-select>
+                        <el-form-item style="margin-left: 20px;">
+                            <el-button type="primary" @click="generateInstance">生成实例</el-button>
+                        </el-form-item>
+                        <el-form-item style="margin-left: 20px;">
+                            <el-button @click="backToMenu">返回菜单</el-button>
+                        </el-form-item>
+                        <!-- <el-form-item style="margin-left: 20px;">
+                    <el-button type="primary" :loading="isLoading" @click="batchInstance"
+                      >批量生成</el-button
+                    >
+                  </el-form-item> -->
+                        <el-label v-model="formData.seed" type="textarea" style="flex: 2; margin-left: 20px; font-size: 18px" :rows="2">秘钥生成时间：{{formData.gen_time}}s 加密时间：{{formData.enc_time}}s 解密时间：{{formData.dec_time}}s
+                            <!-- 准确率：{{formData.accuracy}} -->
+                        </el-label>
+                        <el-label v-if="formData.isSuccess" style=" color: goldenrod;font-weight: bold; font-size: 18px">解密成功！</el-label>
+                    </div>
+                </el-form-item>
+
+                <el-form-item label="种子">
+                    <el-input v-model="formData.seed" rows="1" type="textarea"></el-input>
+                </el-form-item>
+                <el-form-item label="明文长度">
+                    <el-input v-model="formData.plainLength" type="textarea" rows="3"></el-input>
+                </el-form-item>
+                <el-form-item label="明文">
+                    <el-input v-model="formData.plainText" type="textarea" rows="3"></el-input>
+                </el-form-item>
+                <el-form-item label="公钥">
+                    <el-input v-model="formData.publicKey" type="textarea" rows="10"></el-input>
+                </el-form-item>
+                <el-form-item label="私钥">
+                    <el-input v-model="formData.privateKey" type="textarea" rows="10"></el-input>
+                </el-form-item>
+                <el-form-item label="密文长度">
+                    <el-input v-model="formData.cipherLength" type="textarea" rows="3"></el-input>
+                </el-form-item>
+                <el-form-item label="密文">
+                    <el-input v-model="formData.cipherText" type="textarea" rows="10"></el-input>
+                </el-form-item>
+                <el-form-item label="解密后文本">
+                    <el-input v-model="formData.de_text" type="textarea" rows="3"></el-input>
+                </el-form-item>
+            </el-form>
+        </el-main>
+        </el-container>
+        </el-container>
+    </div>
+
+    <script src="../../static/js/vue-v2.6.11.js"></script>
+    <script src="../../static/js/element-ui@2.13.0-index.js"></script>
+    <script src="../../static/js/jquery.js"></script>
+    <script>
+        new Vue({
+            el: "#app",
+            data() {
+                return {
+                    formData: {
+                        avg_text: "",
+                        seed: "",
+                        security: "128",
+                        plainLength: "",
+                        plainText: "",
+                        publicKey: "",
+                        privateKey: "",
+                        cipherLength: "",
+                        cipherText: "",
+                        gen_time: "0.00",
+                        enc_time: "0.00",
+                        dec_time: "0.00",
+                        accuracy: "",
+                        de_text: "",
+                        is_success: false,
+                    },
+                    isLoading: false,
+                };
+            },
+            methods: {
+                handleSelect(index) {
+                    if (index === "1") {
+                        // 跳转到 encrypt.html
+                        window.location.href = "encrypt.html";
+                    }
+                    if (index === "2") {
+                        // 跳转到 decrypt.html
+                        window.location.href = "decrypt.html";
+                    }
+                    if (index === "3") {
+                        // 跳转到 keygen.html
+                        window.location.href = "keygen.html";
+                    }
+                },
+                generateInstance() {
+                    let that = this.formData;
+                    $.ajax({
+                        type: "GET",
+                        url: "http://localhost:8080/genInstance?security=" + that.security,
+                        success: function(data) {
+                            console.log(data);
+                            that.seed = data.seed;
+                            that.plainLength = data.mlen;
+                            that.plainText = data.msg;
+                            that.publicKey = data.pk;
+                            that.privateKey = data.sk;
+                            that.cipherLength = data.clen;
+                            that.cipherText = data.c;
+                            that.gen_time = data.gen_time;
+                            that.enc_time = data.enc_time;
+                            that.dec_time = data.dec_time;
+                            that.isSuccess = parseInt(data.is_success);
+                            that.de_text = data.de_msg;
+                        },
+                        error: function(e) {
+                            alert(e.msg);
+                        },
+                    });
+                },
+                backToMenu() {
+                    window.location.href = "menu.html";
+                },
+                batchInstance() {
+                    this.isLoading = true;
+                    let that = this.formData;
+                    let tt = this;
+                    $.ajax({
+                        type: "GET",
+                        url: "http://localhost:8080/batchGenInstance?security=" + that.security,
+                        success: function(data) {
+                            console.log(data);
+                            that.avg_text = "平均";
+                            let pattern = /ave_gen_time = (\d+\.\d+)/;
+                            let match = data.match(pattern);
+                            that.gen_time = match[1];
+
+                            pattern = /ave_enc_time = (\d+\.\d+)/;
+                            match = data.match(pattern);
+                            that.enc_time = match[1];
+
+                            pattern = /ave_dec_time = (\d+\.\d+)/;
+                            match = data.match(pattern);
+                            that.dec_time = match[1];
+
+                            pattern = /correct rate = (\d+\.\d+)/;
+                            match = data.match(pattern);
+                            that.accuracy = match[1];
+                            const blob = new Blob([data], {
+                                type: 'application/octet-stream'
+                            });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = "batch_instance.txt";
+                            a.click();
+                            URL.revokeObjectURL(url);
+                            tt.isLoading = false;
+                        },
+                        error: function(e) {
+                            alert(e.msg);
+                            tt.isLoading = false;
+                        },
+                    });
+                },
+            },
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,253 @@
+/* 菜单页面专用样式 */
+
+
+/* 全局样式重置和基础设置 */
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", tahoma, arial, simsun, "宋体";
+    background-image: url("../img/background.jpg");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    min-height: 100vh;
+    position: relative;
+}
+
+
+/* 半透明遮罩层，增强文字可读性 */
+
+body::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.85);
+    z-index: -1;
+}
+
+
+/* 头部样式 */
+
+.el-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+    padding: 10px 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.el-header::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0,0 L100,0 L100,100 L0,100 Z" fill="rgba(255,255,255,0.1)"/></svg>');
+    background-size: cover;
+}
+
+.el-header h2 {
+    margin: 0;
+    margin-left: 20px;
+    padding: 10px 0;
+    text-align: center;
+    font-size: 28px;
+    font-weight: 600;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    letter-spacing: 2px;
+    position: relative;
+    z-index: 1;
+}
+
+
+/* 头部Logo样式 */
+
+.header-logo {
+    width: 60px;
+    height: 60px;
+    margin-right: 15px;
+    border-radius: 50%;
+    background: white;
+    padding: 5px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    position: relative;
+    z-index: 1;
+    object-fit: contain;
+}
+
+@media (max-width: 768px) {
+    .header-logo {
+        width: 45px;
+        height: 45px;
+        margin-right: 10px;
+    }
+}
+
+
+/* 主内容区域样式 */
+
+.el-main {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 80px);
+    padding: 40px 20px;
+}
+
+
+/* 卡片样式 */
+
+.el-card {
+    width: 100%;
+    max-width: 800px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    border: none;
+    background: white;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.el-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+}
+
+
+/* 分隔线样式 */
+
+.el-divider {
+    margin: 20px 0;
+    position: relative;
+}
+
+.el-divider--horizontal {
+    height: 1px;
+    background: linear-gradient(to right, transparent, #e0e0e0, transparent);
+}
+
+.el-divider__text {
+    color: #666;
+    font-size: 20px;
+    font-weight: 600;
+    background: white;
+    padding: 0 20px;
+}
+
+
+/* 按钮样式 */
+
+.menu-button {
+    width: 100%;
+    height: 100px;
+    font-size: 18px;
+    font-weight: 600;
+    border-radius: 8px;
+    border: none;
+    color: white;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.menu-button::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient( 90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: all 0.5s ease;
+}
+
+.menu-button:hover::before {
+    left: 100%;
+}
+
+.menu-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.6);
+    background: linear-gradient(135deg, #5a67d8 0%, #4c51bf 100%);
+}
+
+.menu-button:active {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(102, 126, 234, 0.5);
+}
+
+
+/* 量子算法攻击按钮 */
+
+.quantum-button {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.quantum-button:hover {
+    background: linear-gradient(135deg, #e072e8 0%, #d83a50 100%);
+}
+
+
+/* 格签名按钮 */
+
+.signature-button {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.signature-button:hover {
+    background: linear-gradient(135deg, #3ca6f7 0%, #00d1d1 100%);
+}
+
+
+/* 非结构格加密按钮 */
+
+.encryption-button {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.encryption-button:hover {
+    background: linear-gradient(135deg, #f75687 0%, #fdd017 100%);
+}
+
+
+/* 短格基生成按钮 */
+
+.basis-button {
+    background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+}
+
+.basis-button:hover {
+    background: linear-gradient(135deg, #29bec0 0%, #2a0759 100%);
+}
+
+
+/* 响应式调整 */
+
+@media (max-width: 768px) {
+    .el-header h2 {
+        font-size: 24px;
+    }
+    .el-main {
+        padding: 20px 10px;
+    }
+    .el-card {
+        width: 95%;
+    }
+    .menu-button {
+        height: 80px;
+        font-size: 16px;
+    }
+}

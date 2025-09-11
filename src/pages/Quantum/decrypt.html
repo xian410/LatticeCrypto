@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>解密页面 - 格密码算法系统</title>
+    <link rel="stylesheet" href="../static/css/element-ui@2.13.0-theme-chalk-index.css" />
+</head>
+
+<body>
+    <div id="app">
+        <el-header>
+            <div style="display: flex; align-items: center; justify-content: center">
+                <img src="../static/img/bupt.png" alt="BUPT Logo" style="width: 200px; height: 60px; margin-right: 20px" />
+                <h2 style="margin: 0; text-align: center">解密操作</h2>
+            </div>
+        </el-header>
+
+        <el-main>
+            <el-container>
+                <el-card>
+                    <el-divider>解密参数设置</el-divider>
+                    <el-form ref="decryptForm" :model="formData" label-width="120px">
+                        <el-form-item label="安全等级">
+                            <el-select v-model="formData.security" placeholder="选择安全等级">
+                                <el-option label="128bit" value="128"></el-option>
+                                <el-option label="192bit" value="192"></el-option>
+                                <el-option label="256bit" value="256"></el-option>
+                                <el-option label="384bit" value="384"></el-option>
+                            </el-select>
+                        </el-form-item>
+
+                        <el-form-item label="输入密文">
+                            <el-input v-model="formData.cipherText" type="textarea" rows="10" placeholder="请输入要解密的密文"></el-input>
+                        </el-form-item>
+
+                        <el-form-item label="私钥">
+                            <el-input v-model="formData.privateKey" type="textarea" rows="10" placeholder="请输入私钥"></el-input>
+                        </el-form-item>
+
+                        <el-form-item label="解密结果">
+                            <el-input v-model="formData.decryptedText" type="textarea" rows="5" :readonly="true" placeholder="解密后的明文将显示在这里"></el-input>
+                        </el-form-item>
+
+                        <el-form-item>
+                            <el-button type="primary" @click="decryptData">解密</el-button>
+                            <el-button @click="clearForm">清空</el-button>
+                            <el-button @click="backToMenu">返回菜单</el-button>
+                        </el-form-item>
+                    </el-form>
+                </el-card>
+            </el-container>
+        </el-main>
+    </div>
+
+    <script src="../static/js/vue-v2.6.11.js"></script>
+    <script src="../static/js/element-ui@2.13.0-index.js"></script>
+    <script src="../static/js/jquery.js"></script>
+    <script>
+        new Vue({
+            el: "#app",
+            data() {
+                return {
+                    formData: {
+                        security: "128",
+                        cipherText: "",
+                        privateKey: "",
+                        decryptedText: "",
+                    },
+                };
+            },
+            methods: {
+                decryptData() {
+                    // 这里可以实现解密的逻辑
+                    this.$alert("解密功能正在开发中", "提示", {
+                        confirmButtonText: "确定",
+                    });
+                },
+                clearForm() {
+                    this.formData.cipherText = "";
+                    this.formData.decryptedText = "";
+                },
+                backToMenu() {
+                    window.location.href = "menu.html";
+                },
+            },
+        });
+    </script>
+</body>
+
+</html>

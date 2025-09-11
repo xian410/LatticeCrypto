@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>格密码算法菜单</title>
+    <link rel="stylesheet" href="../static/css/element-ui@2.13.0-theme-chalk-index.css" />
+</head>
+
+<body>
+    <div id="app">
+        <el-header>
+            <div style="display: flex; align-items: center; justify-content: center">
+                <img src="../static/img/bupt.png" alt="BUPT Logo" style="width: 200px; height: 60px; margin-right: 20px" />
+                <h2 style="margin: 0; text-align: center">格密码算法系统</h2>
+            </div>
+        </el-header>
+
+        <el-main style="
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 80vh;
+        ">
+            <div style="width: 60%">
+                <el-card>
+                    <el-divider>算法选择</el-divider>
+                    <el-row :gutter="20" justify="center">
+                        <el-col :xs="24" :sm="12" :md="8" style="margin-bottom: 20px">
+                            <el-button type="primary" size="large" @click="selectAlgorithm('quantum')" style="
+                    width: 100%;
+                    height: 100px;
+                    font-size: 18px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                  ">
+                                量子算法攻击
+                            </el-button>
+                        </el-col>
+                        <el-col :xs="24" :sm="12" :md="8" style="margin-bottom: 20px">
+                            <el-button type="primary" size="large" @click="selectAlgorithm('signature')" style="
+                    width: 100%;
+                    height: 100px;
+                    font-size: 18px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                  ">
+                                格签名
+                            </el-button>
+                        </el-col>
+                    </el-row>
+                    <el-row :gutter="20" justify="center">
+                        <el-col :xs="24" :sm="12" :md="8" style="margin-bottom: 20px">
+                            <el-button type="primary" size="large" @click="selectAlgorithm('encryption')" style="
+                    width: 100%;
+                    height: 100px;
+                    font-size: 18px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                  ">
+                                非结构格加密
+                            </el-button>
+                        </el-col>
+                        <el-col :xs="24" :sm="12" :md="8" style="margin-bottom: 20px">
+                            <el-button type="primary" size="large" @click="selectAlgorithm('basis')" style="
+                    width: 100%;
+                    height: 100px;
+                    font-size: 18px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                  ">
+                                短格基生成
+                            </el-button>
+                        </el-col>
+                    </el-row>
+                </el-card>
+            </div>
+        </el-main>
+    </div>
+
+    <script src="../static/js/vue-v2.6.11.js"></script>
+    <script src="../static/js/element-ui@2.13.0-index.js"></script>
+    <script src="../static/js/jquery.js"></script>
+    <script>
+        new Vue({
+            el: "#app",
+            data() {
+                return {};
+            },
+            methods: {
+                selectAlgorithm(type) {
+                    if (type === "encryption") {
+                        // 非结构格加密跳转到 keyGen.html
+                        window.location.href = "./LWECrypto/keyGen.html";
+                    } else if (type === "quantum") {
+                        // 量子算法攻击跳转到 Quantum/quantum.html
+                        window.location.href = "./Quantum/quantum.html";
+                    } else {
+                        // 其他算法暂时显示提示信息，因为相关页面可能不存在
+                        this.$alert("该功能正在开发中", "提示", {
+                            confirmButtonText: "确定",
+                        });
+                    }
+                },
+            },
+        });
+    </script>
+</body>
+
+</html>
