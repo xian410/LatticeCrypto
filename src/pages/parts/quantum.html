@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>量子算法攻击 - 格密码算法系统</title>
+    <link rel="stylesheet" href="../../static/css/element-ui@2.13.0-theme-chalk-index.css" />
+</head>
+
+<body>
+    <div id="app">
+        <!-- 顶部标题栏 -->
+        <el-header>
+            <div style="display: flex; align-items: center; justify-content: center">
+                <img src="../../static/img/bupt.png" alt="BUPT Logo" style="width: 200px; height: 60px; margin-right: 20px" />
+                <h2 style="margin: 0; text-align: center">量子算法攻击系统</h2>
+            </div>
+        </el-header>
+
+        <el-main style="display: flex; justify-content: center; align-items: center; min-height: 80vh; padding: 40px 20px;">
+            <div style="width: 95%; max-width: 1200px">
+                <el-card shadow="hover" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);">
+                    <div slot="header" style="text-align: center; padding: 20px">
+                        <h2 style="margin: 0; color: #409eff; font-weight: 600">量子算法攻击系统</h2>
+                        <p style="margin: 10px 0 0 0; color: #666; font-size: 14px">请选择算法类型和操作模式</p>
+                    </div>
+
+                    <el-row :gutter="20">
+                        <!-- 左侧功能选择区域 -->
+                        <el-col :xs="24" :sm="24" :md="8" :lg="6">
+                          <el-card shadow="hover" style="margin-bottom: 20px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); height: 100%;">
+                              <div slot="header" style="text-align: center; padding: 15px">
+                                  <h3 style="margin: 0; color: #409eff; font-weight: 600">算法选择</h3>
+                              </div>
+                              <div style="display: flex; flex-direction: column; gap: 12px; padding: 10px">
+                                  <el-button 
+                                      v-for="func in functionList" 
+                                      :key="func.key"
+                                      :type="activeFunction === func.key ? 'primary' : ''"
+                                      :plain="activeFunction !== func.key"
+                                      @click="selectFunction(func.key)"
+                                      style="margin-left:10px;width: 100%; height: 80px; white-space: normal; line-height: 1.4; padding: 15px; border-radius: 8px; font-weight: 600; box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3); transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; text-align: center;"
+                                      size="medium">
+                                      {{func.label}}
+                                  </el-button>
+                              </div>
+                          </el-card>
+                        </el-col>       
+                        <!-- 中间操作模式区域 -->
+                        <el-col :xs="24" :sm="24" :md="16" :lg="18">
+                            <el-card shadow="hover" style="margin-bottom: 20px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
+                                <div slot="header" style="text-align: center; padding: 15px">
+                                    <h3 style="margin: 0; color: #409eff; font-weight: 600">操作模式</h3>
+                                </div>
+                                
+                                <!-- LPN 问题处理 -->
+                                <div v-if="activeFunction === 'lpn'" style="padding: 20px">
+                                    <el-alert
+                                        title="LPN问题是基于格理论的核心数学问题，选择相应的处理模式。"
+                                        type="info"
+                                        :closable="false"
+                                        style="margin-bottom: 25px; border-radius: 8px;">
+                                    </el-alert>
+                                    <el-row :gutter="20">
+                                        <el-col :xs="24" :sm="12">
+                                            <el-button 
+                                                :type="activeSubFunction === 'generate_lpn' ? 'success' : ''"
+                                                :plain="activeSubFunction !== 'generate_lpn'"
+                                                @click="selectSubFunction('generate_lpn')"
+                                                style="width: 100%; height: 100px; white-space: normal; border-radius: 8px; box-shadow: 0 4px 12px rgba(103, 194, 58, 0.4); transition: all 0.3s ease; margin-bottom: 15px;">
+                                                <div>
+                                                    <div style="font-size: 16px; font-weight: bold;">自动生成LPN问题</div>
+                                                    <div style="font-size: 13px; color: #666; margin-top: 8px;">生成新的LPN实例</div>
+                                                </div>
+                                            </el-button>
+                                        </el-col>
+                                        <el-col :xs="24" :sm="12">
+                                            <el-button 
+                                                :type="activeSubFunction === 'solve_lpn' ? 'success' : ''"
+                                                :plain="activeSubFunction !== 'solve_lpn'"
+                                                @click="selectSubFunction('solve_lpn')"
+                                                style="width: 100%; height: 100px; white-space: normal; border-radius: 8px; box-shadow: 0 4px 12px rgba(103, 194, 58, 0.4); transition: all 0.3s ease; margin-bottom: 15px;">
+                                                <div>
+                                                    <div style="font-size: 16px; font-weight: bold;">解决已知LPN问题</div>
+                                                    <div style="font-size: 13px; color: #666; margin-top: 8px;">求解现有LPN实例</div>
+                                                </div>
+                                            </el-button>
+                                        </el-col>
+                                    </el-row>
+                                </div>
+
+                                <!-- DES 攻击 -->
+                                <div v-if="activeFunction === 'des_attack'" style="padding: 20px">
+                                    <el-alert
+                                        title="DES算法攻击模式，选择攻击策略。"
+                                        type="warning"
+                                        :closable="false"
+                                        style="margin-bottom: 25px; border-radius: 8px;">
+                                    </el-alert>
+                                    <el-row :gutter="20">
+                                        <el-col :xs="24" :sm="12">
+                                            <el-button 
+                                                :type="activeSubFunction === 'des_onetime' ? 'warning' : ''"
+                                                :plain="activeSubFunction !== 'des_onetime'"
+                                                @click="selectSubFunction('des_onetime')"
+                                                style="width: 100%; height: 100px; white-space: normal; border-radius: 8px; box-shadow: 0 4px 12px rgba(230, 162, 60, 0.4); transition: all 0.3s ease; margin-bottom: 15px;">
+                                                <div>
+                                                    <div style="font-size: 16px; font-weight: bold;">简化版DES密码——加密部分</div>
+                                                    <div style="font-size: 13px; color: #666; margin-top: 8px;">预处理和密钥准备</div>
+                                                </div>
+                                            </el-button>
+                                        </el-col>
+                                        <el-col :xs="24" :sm="12">
+                                            <el-button 
+                                                :type="activeSubFunction === 'des_attack_part' ? 'warning' : ''"
+                                                :plain="activeSubFunction !== 'des_attack_part'"
+                                                @click="selectSubFunction('des_attack_part')"
+                                                style="width: 100%; height: 100px; white-space: normal; border-radius: 8px; box-shadow: 0 4px 12px rgba(230, 162, 60, 0.4); transition: all 0.3s ease; margin-bottom: 15px;">
+                                                <div>
+                                                    <div style="font-size: 16px; font-weight: bold;">简化版DES密码——攻击部分</div>
+                                                    <div style="font-size: 13px; color: #666; margin-top: 8px;">执行密码破解攻击</div>
+                                                </div>
+                                            </el-button>
+                                        </el-col>
+                                    </el-row>
+                                </div>
+
+                                <!-- SM4 攻击 -->
+                                <div v-if="activeFunction === 'sm4_attack'" style="padding: 20px">
+                                    <el-alert
+                                        title="SM4国密算法攻击模式，选择攻击策略。"
+                                        type="danger"
+                                        :closable="false"
+                                        style="margin-bottom: 25px; border-radius: 8px;">
+                                    </el-alert>
+                                    <el-row :gutter="20">
+                                        <el-col :xs="24" :sm="12">
+                                            <el-button 
+                                                :type="activeSubFunction === 'sm4_onetime' ? 'danger' : ''"
+                                                :plain="activeSubFunction !== 'sm4_onetime'"
+                                                @click="selectSubFunction('sm4_onetime')"
+                                                style="width: 100%; height: 100px; white-space: normal; border-radius: 8px; box-shadow: 0 4px 12px rgba(245, 108, 108, 0.4); transition: all 0.3s ease; margin-bottom: 15px;">
+                                                <div>
+                                                    <div style="font-size: 16px; font-weight: bold;">简化版SM4密码——加密部分</div>
+                                                    <div style="font-size: 13px; color: #666; margin-top: 8px;">预处理和密钥准备</div>
+                                                </div>
+                                            </el-button>
+                                        </el-col>
+                                        <el-col :xs="24" :sm="12">
+                                            <el-button 
+                                                :type="activeSubFunction === 'sm4_attack_part' ? 'danger' : ''"
+                                                :plain="activeSubFunction !== 'sm4_attack_part'"
+                                                @click="selectSubFunction('sm4_attack_part')"
+                                                style="width: 100%; height: 100px; white-space: normal; border-radius: 8px; box-shadow: 0 4px 12px rgba(245, 108, 108, 0.4); transition: all 0.3s ease; margin-bottom: 15px;">
+                                                <div>
+                                                    <div style="font-size: 16px; font-weight: bold;">简化版SM4密码——攻击部分</div>
+                                                    <div style="font-size: 13px; color: #666; margin-top: 8px;">执行密码破解攻击</div>
+                                                </div>
+                                            </el-button>
+                                        </el-col>
+                                    </el-row>
+                                </div>
+
+                                <!-- 加解密操作区域 -->
+                                <div v-if="activeSubFunction === 'des_onetime'|| activeSubFunction === 'sm4_onetime'" style="padding: 20px; border-top: 1px solid #ebeef5; margin-top: 20px;">
+                                    <el-divider content-position="left" style="margin-top: 0; font-weight: 600;">加密操作</el-divider>
+                                    <el-form :model="cryptoParams" label-width="80px" style="margin-top: 20px;">
+                                        <el-form-item label="明文">
+                                            <el-input
+                                                v-model="cryptoParams.plaintext"
+                                                type="textarea"
+                                                :rows="3"
+                                                placeholder="输入明文，密码，点击加密，生成密文"
+                                                style="border-radius: 6px;"
+                                            ></el-input>
+                                        </el-form-item>
+                                        <el-form-item label="秘钥">
+                                            <el-input
+                                                v-model="cryptoParams.key"
+                                                :show-password="true"
+                                                placeholder="输入加密密码"
+                                                style="border-radius: 6px;"
+                                            ></el-input>
+                                        </el-form-item>
+                                        <el-form-item>
+                                            <el-button
+                                                type="primary"
+                                                @click="encryptData"
+                                                :loading="isEncrypting"
+                                                style="border-radius: 6px; font-weight: 600; box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);"
+                                            >加密</el-button>
+                                        </el-form-item>
+                                    </el-form>
+
+                                    <div v-if="cryptoParams.ciphertext">
+                                        <el-divider content-position="left" style="font-weight: 600;">加密结果</el-divider>
+                                        <el-form label-width="80px" style="margin-top: 20px;">
+                                            <el-form-item label="密文">
+                                                <el-input
+                                                    v-model="cryptoParams.ciphertext"
+                                                    type="textarea"
+                                                    :rows="3"
+                                                    readonly
+                                                    placeholder="输入上次生成的密文，点击攻击，暴露攻击结果"
+                                                    style="border-radius: 6px;"
+                                                ></el-input>
+                                            </el-form-item>
+                                        </el-form>
+                                    </div>
+                                </div>
+                                <!-- 攻击部分 -->
+                                <div v-if="activeSubFunction === 'sm4_attack_part' || activeSubFunction === 'des_attack_part'" style="padding: 20px; border-top: 1px solid #ebeef5; margin-top: 20px;">
+                                    <el-divider content-position="left" style="margin-top: 0; font-weight: 600;">攻击操作</el-divider>
+                                    <el-form :model="cryptoParams" label-width="80px" style="margin-top: 20px;">
+                                        <el-row :gutter="20">
+                                            <el-col :xs="24" :sm="12">
+                                                <el-form-item label="明文">
+                                                    <el-input
+                                                        v-model="cryptoParams.plaintext"
+                                                        type="textarea"
+                                                        :rows="3"
+                                                        placeholder="请输入已知明文用于攻击"
+                                                        style="border-radius: 6px;"
+                                                    ></el-input>
+                                                </el-form-item>
+                                            </el-col>
+                                            <el-col :xs="24" :sm="12">
+                                                <el-form-item label="密文">
+                                                    <el-input
+                                                        v-model="cryptoParams.ciphertext"
+                                                        type="textarea"
+                                                        :rows="3"
+                                                        placeholder="请输入对应的密文"
+                                                        style="border-radius: 6px;"
+                                                    ></el-input>
+                                                </el-form-item>
+                                            </el-col>
+                                        </el-row>
+                                        <el-form-item>
+                                            <div style="text-align: center; margin-top: 20px;">
+                                                <el-button
+                                                    type="danger"
+                                                    @click="attackCipher"
+                                                    :loading="isAttacking"
+                                                    style="padding: 15px 40px; font-size: 16px; font-weight: 600; border-radius: 8px; box-shadow: 0 4px 12px rgba(245, 108, 108, 0.4);"
+                                                >
+                                                    <i class="el-icon-lock" style="margin-right: 8px;"></i>
+                                                    开始攻击
+                                                </el-button>
+                                            </div>
+                                        </el-form-item>
+                                    </el-form>
+                                </div>
+                                <!-- LPN 参数设置区域 -->
+                                <div v-if="activeSubFunction === 'generate_lpn'" style="padding: 20px; border-top: 1px solid #ebeef5; margin-top: 20px;">
+                                    <el-divider content-position="left" style="margin-top: 0; font-weight: 600;">LPN参数设置</el-divider>
+                                    <el-row :gutter="20" style="margin-top: 20px;">
+                                        <el-col :xs="24" :sm="12" :md="8">
+                                            <el-form :model="lpnParams" label-width="100px" size="small">
+                                                <el-form-item label="变量个数">
+                                                    <el-input v-model="lpnParams.paramCount" :min="1" :max="10000" style="width: 100%"></el-input>
+                                                </el-form-item>
+                                                <el-form-item label="方程个数">
+                                                    <el-input v-model="lpnParams.equationCount" :min="1" :max="10000" style="width: 100%"></el-input>
+                                                </el-form-item>
+                                            </el-form>
+                                        </el-col>
+                                        <el-col :xs="24" :sm="12" :md="8">
+                                            <el-form :model="lpnParams" label-width="100px" size="small">
+                                                <el-form-item label="误差概率">
+                                                    <el-input v-model="lpnParams.errorRate" :precision="3" :step="0.001" :min="0" :max="1" style="width: 100%"></el-input>
+                                                </el-form-item>
+                                                <el-form-item label="初始参数次数">
+                                                    <el-input v-model="lpnParams.initialParams" :min="1" :max="10000" style="width: 100%"></el-input>
+                                                </el-form-item>
+                                            </el-form>
+                                        </el-col>
+                                        <el-col :xs="24" :sm="24" :md="8">
+                                            <div style="display: flex; align-items: center; justify-content: center; height: 100%;">
+                                                <el-button type="primary" @click="generateLPN" :loading="isGenerating" style="width: 80%; height: 50px; font-size: 16px; font-weight: 600; border-radius: 8px; box-shadow: 0 4px 12px rgba(64, 158, 255, 0.4);">
+                                                    求解
+                                                </el-button>
+                                            </div>
+                                        </el-col>
+                                    </el-row>
+                                </div>
+
+                                <!-- 解决已知LPN问题的操作按钮 -->
+                                <div v-if="activeSubFunction === 'solve_lpn'" style="padding: 20px; border-top: 1px solid #ebeef5; margin-top: 20px;">
+                                    <el-divider content-position="left" style="margin-top: 0; font-weight: 600;">求解已知LPN问题</el-divider>
+                                    <div style="text-align: center; margin-top: 20px;">
+                                        <el-button type="success" @click="solveLPN" :loading="isSolving" style="padding: 15px 40px; font-size: 16px; font-weight: 600; border-radius: 8px; box-shadow: 0 4px 12px rgba(103, 194, 58, 0.4);">
+                                            <i class="el-icon-cpu" style="margin-right: 8px;"></i>
+                                            开始求解
+                                        </el-button>
+                                    </div>
+                                </div>
+
+                                <!-- 结果显示区域 -->
+                                <div v-if="hasResults && activeFunction === 'lpn'" style="padding: 20px; border-top: 1px solid #ebeef5; margin-top: 20px;">
+                                    <el-divider content-position="left" style="margin-top: 0; font-weight: 600;">运行结果</el-divider>
+                                    <div style="margin-top: 20px;">
+                                        <el-row :gutter="20">
+                                            <el-col :xs="24" :sm="12" :md="8" v-if="results.solve">
+                                                <el-card shadow="hover" style="margin-bottom: 15px; border-radius: 8px;">
+                                                    <div style="color: #67c23a; font-size: 14px; margin-bottom: 10px; text-align: center;">所得的解</div>
+                                                    <el-input
+                                                        v-model="results.solve"
+                                                        type="textarea"
+                                                        :rows="6"
+                                                        readonly
+                                                        style="font-family: monospace; border-radius: 6px; font-size: 12px;"
+                                                        placeholder="求解结果将在这里显示..."
+                                                    ></el-input>
+                                                </el-card>
+                                            </el-col>
+                                            <el-col :xs="24" :sm="12" :md="8" v-if="results.rate">
+                                                <el-card shadow="hover" style="margin-bottom: 15px; border-radius: 8px; text-align: center;">
+                                                    <div style="color: #409eff; font-size: 14px; margin-bottom: 5px;">相应概率</div>
+                                                    <div style="font-size: 18px; font-weight: bold;">{{results.rate}}</div>
+                                                </el-card>
+                                            </el-col>
+                                            <el-col :xs="24" :sm="12" :md="8" v-if="results.time">
+                                                <el-card shadow="hover" style="margin-bottom: 15px; border-radius: 8px; text-align: center;">
+                                                    <div style="color: #409eff; font-size: 14px; margin-bottom: 5px;">运行时间</div>
+                                                    <div style="font-size: 18px; font-weight: bold;">{{results.time}}</div>
+                                                </el-card>
+                                            </el-col>
+                                        </el-row>
+                                        
+                                        <div v-if="results.plaintext" style="margin-top: 20px;">
+                                            <el-divider content-position="left" style="font-weight: 600;">原文</el-divider>
+                                            <el-input
+                                                v-model="results.plaintext"
+                                                type="textarea"
+                                                :rows="4"
+                                                readonly
+                                                style="font-family: monospace; border-radius: 6px;"
+                                            ></el-input>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 攻击结果显示区域 -->
+                                <div v-if="hasAttackResults" style="padding: 20px; border-top: 1px solid #ebeef5; margin-top: 20px;">
+                                    <el-divider content-position="left" style="margin-top: 0; font-weight: 600;">攻击结果</el-divider>
+                                    <div style="margin-top: 20px;">
+                                        <el-row :gutter="20">
+                                            <el-col :xs="24" :sm="12" :md="8" v-if="results.secretKey">
+                                                <el-card shadow="hover" style="margin-bottom: 15px; border-radius: 8px;">
+                                                    <div style="color: #f56c6c; font-size: 14px; margin-bottom: 10px; text-align: center;">破解密钥</div>
+                                                    <el-input
+                                                        v-model="results.secretKey"
+                                                        type="textarea"
+                                                        :rows="4"
+                                                        readonly
+                                                        style="font-family: monospace; border-radius: 6px; font-size: 12px; word-break: break-all;"
+                                                        placeholder="破解的密钥将在这里显示..."
+                                                    ></el-input>
+                                                </el-card>
+                                            </el-col>
+                                            <el-col :xs="24" :sm="12" :md="8" v-if="results.rate">
+                                                <el-card shadow="hover" style="margin-bottom: 15px; border-radius: 8px; text-align: center;">
+                                                    <div style="color: #409eff; font-size: 14px; margin-bottom: 5px;">成功概率</div>
+                                                    <div style="font-size: 18px; font-weight: bold;">{{results.rate}}</div>
+                                                </el-card>
+                                            </el-col>
+                                            <el-col :xs="24" :sm="12" :md="8" v-if="results.averageCalls">
+                                                <el-card shadow="hover" style="margin-bottom: 15px; border-radius: 8px; text-align: center;">
+                                                    <div style="color: #67c23a; font-size: 14px; margin-bottom: 5px;">平均调用次数</div>
+                                                    <div style="font-size: 18px; font-weight: bold;">{{results.averageCalls}}</div>
+                                                </el-card>
+                                            </el-col>
+                                        </el-row>
+                                        
+                                        <div v-if="results.plaintext" style="margin-top: 20px;">
+                                            <el-divider content-position="left" style="font-weight: 600;">破解原文</el-divider>
+                                            <el-input
+                                                v-model="results.plaintext"
+                                                type="textarea"
+                                                :rows="4"
+                                                readonly
+                                                style="font-family: monospace; border-radius: 6px;"
+                                            ></el-input>
+                                        </div>
+                                    </div>
+                                </div>
+                            </el-card>
+                        </el-col>
+                    </el-row>
+                </div>
+            </div>
+        </el-main>
+
+        <!-- 底部操作栏 -->
+        <div style="bottom: 0; width: 100%; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); border-top: 1px solid #e0e0e0; z-index: 1000; padding: 20px 0;">
+            <div style="display: flex; justify-content: center; align-items: center;">
+                <button 
+                    onclick="window.location.href='../menu.html'" 
+                    style="
+                        background:rgba(12, 94, 177, 0.3);
+                        color: white;
+                        border: none;
+                        padding: 12px 30px;
+                        font-size: 16px;
+                        font-weight: 600;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+                        min-width: 120px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 8px;
+                    "
+                    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(64, 158, 255, 0.6)'"
+                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(64, 158, 255, 0.4)'"
+                >
+                    <span style="font-size: 14px; margin-right: 4px;">←</span>
+                    返回菜单
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../static/js/vue-v2.6.11.js"></script>
+    <script src="../../static/js/element-ui@2.13.0-index.js"></script>
+    <script src="../../static/js/jquery.js"></script>
+    <script>
+      new Vue({
+        el: "#app",
+        data() {
+          return {
+            activeFunction: "lpn",
+            activeSubFunction: "generate_lpn",
+            isEncrypting: false,
+            isAttacking: false,
+            isGenerating: false,
+            isSolving: false,
+            functionList: [
+              { key: "lpn", label: "基于变分量子算法求解LPN问题" },
+              { key: "des_attack", label: "基于变分量子算法攻击简化版DES密码" },
+              { key: "sm4_attack", label: "基于变分量子算法攻击简化版SM4密码" },
+            ],
+            lpnParams: {
+              paramCount: "",
+              equationCount: "",
+              errorRate: "",
+              initialParams: "",
+            },
+            cryptoParams: {
+              plaintext: "",
+              key: "",
+              ciphertext: "",
+            },
+            results: {
+              solve: "",
+              rate: "",
+              time: "",
+              secretKey: "",
+              plaintext: "",
+              averageCalls: "",
+            },
+          };
+        },
+        computed: {
+          hasResults() {
+            return (
+              this.results.time || this.results.rate || this.results.secretKey || this.results.solve
+            );
+          },
+          hasAttackResults() {
+            return (
+              (this.activeFunction === 'des_attack' || this.activeFunction === 'sm4_attack') &&
+              (this.results.secretKey || this.results.rate || this.results.averageCalls)
+            );
+          },
+        },
+        methods: {
+          selectFunction(func) {
+            this.activeFunction = func;
+            this.clearResults();
+            // 自动选择第一个子功能
+            if (func === "lpn") {
+              this.activeSubFunction = "generate_lpn";
+            } else if (func === "des_attack") {
+              this.activeSubFunction = "des_onetime";
+            } else if (func === "sm4_attack") {
+              this.activeSubFunction = "sm4_onetime";
+            }
+          },
+          selectSubFunction(subFunc) {
+            this.activeSubFunction = subFunc;
+            this.clearResults();
+          },
+          async generateLPN() {
+            if (!this.lpnParams.paramCount || !this.lpnParams.equationCount || !this.lpnParams.errorRate || !this.lpnParams.initialParams) {
+              this.$message.warning("请填写完整的LPN参数");
+              return;
+            }
+
+            this.isGenerating = true;
+
+            // 模拟LPN问题生成过程
+            await this.simulateDelay(2000);
+
+            this.results.time = "2.45s";
+            this.results.rate = "95.8%";
+            this.results.solve = "生成完成";
+
+            this.isGenerating = false;
+            this.$message.success("LPN问题生成完成！");
+          },
+          async solveLPN() {
+            this.isSolving = true;
+
+            // 模拟LPN问题求解过程
+            await this.simulateDelay(3000);
+
+            // 生成模拟的解结果（可能是很大的数值）
+            const sampleSolution = `求解结果：\n` +
+              `x1 = 1847623984751829384756\n` +
+              `x2 = 9384756182947561829475618294756\n` +
+              `x3 = 4756182947561829475618294756182947561829\n` +
+              `x4 = 182947561829475618294756182947561829475618\n` +
+              `x5 = 756182947561829475618294756182947561829475\n` +
+              `...\n` +
+              `x97 = 1829475618294756182947561829475618294756\n` +
+              `x98 = 5618294756182947561829475618294756182947\n` +
+              `x99 = 9475618294756182947561829475618294756182\n` +
+              `x100 = 2947561829475618294756182947561829475618`;
+            
+            this.results.time = "4.73s";
+            this.results.rate = "98.2%";
+            this.results.solve = sampleSolution;
+
+            this.isSolving = false;
+            this.$message.success("已知LPN问题求解完成！");
+          },
+          async encryptData() {
+            if (!this.cryptoParams.plaintext || !this.cryptoParams.key) {
+              this.$message.warning("请输入明文和密码");
+              return;
+            }
+
+            this.isEncrypting = true;
+
+            // 模拟加密过程
+            await this.simulateDelay(1000);
+
+            // 生成模拟密文
+            const algorithmType = this.activeSubFunction.includes("des")
+              ? "DES"
+              : "SM4";
+            this.cryptoParams.ciphertext =
+              `[${algorithmType}加密] ` +
+              btoa(
+                this.cryptoParams.plaintext + "|" + this.cryptoParams.key
+              ).replace(/=/g, "");
+
+            this.results.time = "0.12s";
+            this.isEncrypting = false;
+            this.$message.success("加密完成！");
+          },
+          async attackCipher() {
+            if (!this.cryptoParams.plaintext || !this.cryptoParams.ciphertext) {
+              this.$message.warning("请输入明文和密文");
+              return;
+            }
+
+            this.isAttacking = true;
+
+            // 模拟攻击过程
+            await this.simulateDelay(3000);
+
+            // 生成攻击结果
+            const attackSuccess = Math.random() > 0.2; // 80%成功率
+
+            if (attackSuccess) {
+              // 生成更长的模拟密钥以适应大密钥值的展示
+              const keyLength = Math.floor(Math.random() * 200 + 100); // 100-300字符长度
+              let simulatedKey = "0x";
+              for (let i = 0; i < keyLength; i++) {
+                simulatedKey += Math.floor(Math.random() * 16).toString(16).toUpperCase();
+              }
+              this.results.secretKey = simulatedKey;
+              this.results.plaintext =
+                this.cryptoParams.plaintext || "破解的原文内容";
+              this.results.time = "3.21s";
+              this.results.rate = "82.5%";
+              this.results.averageCalls = Math.floor(Math.random() * 1000 + 500) + "次";
+
+              this.$message.success("攻击成功！密钥已破解。");
+            } else {
+              this.results.time = "5.67s";
+              this.results.rate = "0%";
+              this.results.averageCalls = Math.floor(Math.random() * 2000 + 1000) + "次";
+
+              this.$message.error("攻击失败，请调整参数后重试。");
+            }
+
+            this.isAttacking = false;
+          },
+          resetCryptoParams() {
+            this.cryptoParams = {
+              plaintext: "",
+              key: "",
+              ciphertext: "",
+            };
+            this.clearResults();
+          },
+          clearResults() {
+            this.results = {
+              solve: "",
+              rate: "",
+              time: "",
+              secretKey: "",
+              plaintext: "",
+              averageCalls: "",
+            };
+          },
+          simulateDelay(ms) {
+            return new Promise((resolve) => setTimeout(resolve, ms));
+          },
+        },
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>格签名算法 - 格密码算法系统</title>
+    <link rel="stylesheet" href="../../static/css/element-ui@2.13.0-theme-chalk-index.css" />
+</head>
+
+<body>
+    <div id="app">
+        <!-- 顶部标题栏 -->
+        <el-header>
+            <div style="display: flex; align-items: center; justify-content: center">
+                <img src="../../static/img/bupt.png" alt="BUPT Logo" style="width: 200px; height: 60px; margin-right: 20px" />
+                <h2 style="margin: 0; text-align: center">格签名算法系统</h2>
+            </div>
+        </el-header>
+
+        <el-main style="display: flex; justify-content: center; align-items: center; min-height: 80vh; padding: 40px 20px;">
+            <div style="width: 95%; max-width: 1200px">
+                <el-card shadow="hover" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);">
+                    <div slot="header" style="text-align: center; padding: 20px">
+                        <h2 style="margin: 0; color: #409eff; font-weight: 600">格签名算法系统</h2>
+                        <p style="margin: 10px 0 0 0; color: #666; font-size: 14px">请选择签名算法类型和操作模式</p>
+                    </div>
+
+                    <el-row :gutter="20">
+                        <!-- 左侧功能选择区域 -->
+                        <el-col :xs="24" :sm="24" :md="8" :lg="6">
+                          <el-card shadow="hover" style="margin-bottom: 20px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); height: 100%;">
+                              <div slot="header" style="text-align: center; padding: 15px">
+                                  <h3 style="margin: 0; color: #409eff; font-weight: 600">算法选择</h3>
+                              </div>
+                              <div style="display: flex; flex-direction: column; gap: 12px; padding: 10px">
+                                  <el-button 
+                                      v-for="func in functionList" 
+                                      :key="func.key"
+                                      :type="activeFunction === func.key ? 'primary' : ''"
+                                      :plain="activeFunction !== func.key"
+                                      @click="selectFunction(func.key)"
+                                      style="margin-left:10px;width: 100%; height: 80px; white-space: normal; line-height: 1.4; padding: 15px; border-radius: 8px; font-weight: 600; box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3); transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; text-align: center;"
+                                      size="medium">
+                                      {{func.label}}
+                                  </el-button>
+                              </div>
+                          </el-card>
+                        </el-col>       
+                        <!-- 中间操作模式区域 -->
+                        <el-col :xs="24" :sm="24" :md="16" :lg="18">
+                            <el-card shadow="hover" style="margin-bottom: 20px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
+                                <div slot="header" style="text-align: center; padding: 15px">
+                                    <h3 style="margin: 0; color: #409eff; font-weight: 600">操作模式</h3>
+                                </div>
+                                
+                                <!-- 格签名操作 -->
+                                <div v-if="activeFunction === 'lattice_sign'" style="padding: 20px">
+                                    <el-alert
+                                        title="格签名是基于格理论的数字签名算法，提供抗量子攻击的签名与验证功能。"
+                                        type="success"
+                                        :closable="false"
+                                        style="margin-bottom: 25px; border-radius: 8px;">
+                                    </el-alert>
+                                    <el-row :gutter="20">
+                                        <el-col :xs="24" :sm="12">
+                                            <el-button 
+                                                :type="activeSubFunction === 'key_generation' ? 'success' : ''"
+                                                :plain="activeSubFunction !== 'key_generation'"
+                                                @click="selectSubFunction('key_generation')"
+                                                style="width: 100%; height: 100px; white-space: normal; border-radius: 8px; box-shadow: 0 4px 12px rgba(103, 194, 58, 0.4); transition: all 0.3s ease; margin-bottom: 15px;">
+                                                <div>
+                                                    <div style="font-size: 16px; font-weight: bold;">密钥生成</div>
+                                                    <div style="font-size: 13px; color: #666; margin-top: 8px;">生成签名密钥对</div>
+                                                </div>
+                                            </el-button>
+                                        </el-col>
+                                        <el-col :xs="24" :sm="12">
+                                            <el-button 
+                                                :type="activeSubFunction === 'sign_verify' ? 'success' : ''"
+                                                :plain="activeSubFunction !== 'sign_verify'"
+                                                @click="selectSubFunction('sign_verify')"
+                                                style="width: 100%; height: 100px; white-space: normal; border-radius: 8px; box-shadow: 0 4px 12px rgba(103, 194, 58, 0.4); transition: all 0.3s ease; margin-bottom: 15px;">
+                                                <div>
+                                                    <div style="font-size: 16px; font-weight: bold;">签名与验证</div>
+                                                    <div style="font-size: 13px; color: #666; margin-top: 8px;">对消息进行签名和验证</div>
+                                                </div>
+                                            </el-button>
+                                        </el-col>
+                                    </el-row>
+                                </div>
+
+
+
+                                <!-- 密钥生成区域 -->
+                                <div v-if="activeSubFunction === 'key_generation'" style="padding: 20px; border-top: 1px solid #ebeef5; margin-top: 20px;">
+                                    <el-divider content-position="left" style="margin-top: 0; font-weight: 600;">密钥生成</el-divider>
+                                    <el-form :model="keyParams" label-width="120px" style="margin-top: 20px;">
+                                        <el-row :gutter="20">
+                                            <el-col :xs="24" :sm="12" :md="8">
+                                                <el-form-item label="安全等级">
+                                                    <el-select v-model="keyParams.securityLevel" placeholder="选择安全等级" style="width: 100%; border-radius: 6px;">
+                                                        <el-option label="128 bit" value="128"></el-option>
+                                                        <el-option label="192 bit" value="192"></el-option>
+                                                        <el-option label="256 bit" value="256"></el-option>
+                                                    </el-select>
+                                                </el-form-item>
+                                            </el-col>
+                                            <el-col :xs="24" :sm="12" :md="8">
+                                                <el-form-item label="格维度 (n)">
+                                                    <el-input
+                                                        v-model="keyParams.dimension"
+                                                        placeholder="请输入格维度"
+                                                        style="border-radius: 6px;"
+                                                    ></el-input>
+                                                </el-form-item>
+                                            </el-col>
+                                            <el-col :xs="24" :sm="12" :md="8">
+                                                <el-form-item label="模数 (q)">
+                                                    <el-input
+                                                        v-model="keyParams.modulus"
+                                                        placeholder="请输入模数"
+                                                        style="border-radius: 6px;"
+                                                    ></el-input>
+                                                </el-form-item>
+                                            </el-col>
+                                        </el-row>
+                                        <el-row :gutter="20">
+                                            <el-col :xs="24" :sm="12">
+                                                <el-form-item label="参数文件">
+                                                    <el-upload
+                                                        class="upload-demo"
+                                                        :before-upload="handleParamFileUpload"
+                                                        :show-file-list="false"
+                                                        accept=".txt,.json"
+                                                        style="width: 100%;"
+                                                    >
+                                                        <el-button type="info" style="width: 100%; border-radius: 6px;">
+                                                            <i class="el-icon-upload2" style="margin-right: 8px;"></i>
+                                                            上传参数文件
+                                                        </el-button>
+                                                    </el-upload>
+                                                    <div v-if="paramFileName" style="margin-top: 8px; font-size: 12px; color: #67c23a;">
+                                                        已上传：{{paramFileName}}
+                                                    </div>
+                                                </el-form-item>
+                                            </el-col>
+                                        </el-row>
+                                        <el-form-item>
+                                            <div style="text-align: center; margin-top: 20px;">
+                                                <el-button
+                                                    type="success"
+                                                    @click="generateKeys"
+                                                    :loading="isGenerating"
+                                                    style="padding: 15px 40px; font-size: 16px; font-weight: 600; border-radius: 8px; box-shadow: 0 4px 12px rgba(103, 194, 58, 0.4);"
+                                                >
+                                                    <i class="el-icon-key" style="margin-right: 8px;"></i>
+                                                    生成密钥对
+                                                </el-button>
+                                            </div>
+                                        </el-form-item>
+                                    </el-form>
+                                </div>
+
+                                <!-- 签名验证操作区域 -->
+                                <div v-if="activeSubFunction === 'sign_verify'" style="padding: 20px; border-top: 1px solid #ebeef5; margin-top: 20px;">
+                                    <el-divider content-position="left" style="margin-top: 0; font-weight: 600;">签名操作</el-divider>
+                                    <el-form :model="signParams" label-width="80px" style="margin-top: 20px;">
+                                        <el-form-item label="消息">
+                                            <el-input
+                                                v-model="signParams.message"
+                                                type="textarea"
+                                                :rows="3"
+                                                placeholder="输入要签名的消息内容"
+                                                style="border-radius: 6px;"
+                                            ></el-input>
+                                        </el-form-item>
+                                        <el-form-item label="消息文件">
+                                            <el-upload
+                                                class="upload-demo"
+                                                :before-upload="handleMessageFileUpload"
+                                                :show-file-list="false"
+                                                accept=".txt"
+                                                style="width: 100%;"
+                                            >
+                                                <el-button type="info" style="width: 100%; border-radius: 6px;">
+                                                    <i class="el-icon-upload2" style="margin-right: 8px;"></i>
+                                                    上传消息文件
+                                                </el-button>
+                                            </el-upload>
+                                            <div v-if="messageFileName" style="margin-top: 8px; font-size: 12px; color: #67c23a;">
+                                                已上传：{{messageFileName}}
+                                            </div>
+                                        </el-form-item>
+                                        <el-form-item label="私钥" v-if="signParams.privateKey">
+                                            <el-input
+                                                v-model="signParams.privateKey"
+                                                type="textarea"
+                                                :rows="2"
+                                                readonly
+                                                style="border-radius: 6px; font-family: monospace; font-size: 12px;"
+                                            ></el-input>
+                                        </el-form-item>
+                                        <el-row :gutter="20">
+                                            <el-col :xs="24" :sm="12">
+                                                <el-form-item>
+                                                    <el-button
+                                                        type="primary"
+                                                        @click="signMessage"
+                                                        :loading="isSigning"
+                                                        style="width: 100%; border-radius: 6px; font-weight: 600; box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);"
+                                                    >
+                                                        <i class="el-icon-edit" style="margin-right: 8px;"></i>
+                                                        签名
+                                                    </el-button>
+                                                </el-form-item>
+                                            </el-col>
+                                            <el-col :xs="24" :sm="12">
+                                                <el-form-item>
+                                                    <el-button
+                                                        type="success"
+                                                        @click="verifySignature"
+                                                        :loading="isVerifying"
+                                                        :disabled="!signParams.signature"
+                                                        style="width: 100%; border-radius: 6px; font-weight: 600; box-shadow: 0 2px 8px rgba(103, 194, 58, 0.3);"
+                                                    >
+                                                        <i class="el-icon-check" style="margin-right: 8px;"></i>
+                                                        验证
+                                                    </el-button>
+                                                </el-form-item>
+                                            </el-col>
+                                        </el-row>
+                                    </el-form>
+                                </div>
+
+
+
+                                <!-- 结果显示区域 -->
+                                <div v-if="hasResults" style="padding: 20px; border-top: 1px solid #ebeef5; margin-top: 20px;">
+                                    <el-divider content-position="left" style="margin-top: 0; font-weight: 600;">运行结果</el-divider>
+                                    <div style="margin-top: 20px;">
+                                        <!-- 密钥生成结果 -->
+                                        <div v-if="results.Kengen_time">
+                                            <el-divider content-position="left" style="font-weight: 600; margin-bottom: 15px;">密钥生成结果</el-divider>
+                                            <el-row :gutter="15">
+                                                <el-col :xs="24" :sm="12" :md="6">
+                                                    <el-card shadow="hover" style="margin-bottom: 15px; border-radius: 8px; height: 120px;">
+                                                        <div style="color: #409eff; font-size: 14px; margin-bottom: 8px; text-align: center; font-weight: 600;">Kengen_time</div>
+                                                        <div style="font-size: 16px; font-weight: bold; text-align: center;">{{results.Kengen_time}}</div>
+                                                        <div style="font-size: 12px; color: #666; text-align: center; margin-top: 5px;">密钥生成时间</div>
+                                                    </el-card>
+                                                </el-col>
+                                                <el-col :xs="24" :sm="12" :md="6">
+                                                    <el-card shadow="hover" style="margin-bottom: 15px; border-radius: 8px; height: 120px;">
+                                                        <div style="color: #409eff; font-size: 14px; margin-bottom: 8px; text-align: center; font-weight: 600;">Seed</div>
+                                                        <div style="font-size: 11px; font-weight: bold; text-align: center; word-break: break-all; font-family: monospace; overflow: hidden; text-overflow: ellipsis;">{{results.Seed}}</div>
+                                                        <div style="font-size: 12px; color: #666; text-align: center; margin-top: 5px;">随机种子</div>
+                                                    </el-card>
+                                                </el-col>
+                                            </el-row>
+                                            <el-row :gutter="15">
+                                                <el-col :xs="24" :sm="12">
+                                                    <el-card shadow="hover" style="margin-bottom: 15px; border-radius: 8px;">
+                                                        <div style="color: #67c23a; font-size: 14px; margin-bottom: 10px; text-align: center; font-weight: 600;">PublicKey</div>
+                                                        <div style="font-size: 12px; color: #666; text-align: center; margin-bottom: 8px;">公钥</div>
+                                                        <el-input
+                                                            v-model="results.PublicKey"
+                                                            type="textarea"
+                                                            :rows="4"
+                                                            readonly
+                                                            style="font-family: monospace; border-radius: 6px; font-size: 11px;"
+                                                            placeholder="生成的公钥将在这里显示..."
+                                                        ></el-input>
+                                                    </el-card>
+                                                </el-col>
+                                                <el-col :xs="24" :sm="12">
+                                                    <el-card shadow="hover" style="margin-bottom: 15px; border-radius: 8px;">
+                                                        <div style="color: #f56c6c; font-size: 14px; margin-bottom: 10px; text-align: center; font-weight: 600;">Privatekey</div>
+                                                        <div style="font-size: 12px; color: #666; text-align: center; margin-bottom: 8px;">私钥</div>
+                                                        <el-input
+                                                            v-model="results.Privatekey"
+                                                            type="textarea"
+                                                            :rows="4"
+                                                            readonly
+                                                            style="font-family: monospace; border-radius: 6px; font-size: 11px;"
+                                                            placeholder="生成的私钥将在这里显示..."
+                                                        ></el-input>
+                                                    </el-card>
+                                                </el-col>
+                                            </el-row>
+                                        </div>
+
+                                        <!-- 签名结果 -->
+                                        <div v-if="results.Signature_time">
+                                            <el-divider content-position="left" style="font-weight: 600; margin-bottom: 15px;">签名结果</el-divider>
+                                            <el-row :gutter="15">
+                                                <el-col :xs="24" :sm="8" :md="4">
+                                                    <el-card shadow="hover" style="margin-bottom: 15px; border-radius: 8px; height: 140px;">
+                                                        <div style="color: #409eff; font-size: 14px; margin-bottom: 8px; text-align: center; font-weight: 600;">PlaintextLength</div>
+                                                        <div style="font-size: 16px; font-weight: bold; text-align: center;">{{results.PlaintextLength}}</div>
+                                                        <div style="font-size: 12px; color: #666; text-align: center; margin-top: 5px;">明文长度(字节)</div>
+                                                    </el-card>
+                                                </el-col>
+                                                <el-col :xs="24" :sm="8" :md="4">
+                                                    <el-card shadow="hover" style="margin-bottom: 15px; border-radius: 8px; height: 140px;">
+                                                        <div style="color: #409eff; font-size: 14px; margin-bottom: 8px; text-align: center; font-weight: 600;">Signature_time</div>
+                                                        <div style="font-size: 16px; font-weight: bold; text-align: center;">{{results.Signature_time}}</div>
+                                                        <div style="font-size: 12px; color: #666; text-align: center; margin-top: 5px;">签名时间</div>
+                                                    </el-card>
+                                                </el-col>
+                                                <el-col :xs="24" :sm="8" :md="4">
+                                                    <el-card shadow="hover" style="margin-bottom: 15px; border-radius: 8px; height: 140px;">
+                                                        <div style="color: #409eff; font-size: 14px; margin-bottom: 8px; text-align: center; font-weight: 600;">SignatureLength</div>
+                                                        <div style="font-size: 16px; font-weight: bold; text-align: center;">{{results.SignatureLength}}</div>
+                                                        <div style="font-size: 12px; color: #666; text-align: center; margin-top: 5px;">签名长度(字节)</div>
+                                                    </el-card>
+                                                </el-col>
+                                            </el-row>
+                                            <el-row :gutter="15">
+                                                <el-col :xs="24" :sm="12">
+                                                    <el-card shadow="hover" style="margin-bottom: 15px; border-radius: 8px;">
+                                                        <div style="color: #e6a23c; font-size: 14px; margin-bottom: 10px; text-align: center; font-weight: 600;">Plaintext</div>
+                                                        <div style="font-size: 12px; color: #666; text-align: center; margin-bottom: 8px;">明文内容</div>
+                                                        <el-input
+                                                            v-model="results.Plaintext"
+                                                            type="textarea"
+                                                            :rows="3"
+                                                            readonly
+                                                            style="font-family: monospace; border-radius: 6px; font-size: 12px;"
+                                                            placeholder="明文内容将在这里显示..."
+                                                        ></el-input>
+                                                    </el-card>
+                                                </el-col>
+                                                <el-col :xs="24" :sm="12">
+                                                    <el-card shadow="hover" style="margin-bottom: 15px; border-radius: 8px;">
+                                                        <div style="color: #409eff; font-size: 14px; margin-bottom: 10px; text-align: center; font-weight: 600;">Signature</div>
+                                                        <div style="font-size: 12px; color: #666; text-align: center; margin-bottom: 8px;">签名</div>
+                                                        <el-input
+                                                            v-model="results.Signature"
+                                                            type="textarea"
+                                                            :rows="3"
+                                                            readonly
+                                                            style="font-family: monospace; border-radius: 6px; font-size: 11px;"
+                                                            placeholder="生成的签名将在这里显示..."
+                                                        ></el-input>
+                                                    </el-card>
+                                                </el-col>
+                                            </el-row>
+                                        </div>
+
+                                        <!-- 验证结果 -->
+                                        <div v-if="results.Verify_time">
+                                            <el-divider content-position="left" style="font-weight: 600; margin-bottom: 15px;">验证结果</el-divider>
+                                            <el-row :gutter="15">
+                                                <el-col :xs="24" :sm="8">
+                                                    <el-card shadow="hover" style="margin-bottom: 15px; border-radius: 8px; text-align: center; height: 140px;">
+                                                        <div style="color: #409eff; font-size: 14px; margin-bottom: 8px; font-weight: 600;">Verify_time</div>
+                                                        <div style="font-size: 16px; font-weight: bold;">{{results.Verify_time}}</div>
+                                                        <div style="font-size: 12px; color: #666; margin-top: 5px;">验证时间</div>
+                                                    </el-card>
+                                                </el-col>
+                                                <el-col :xs="24" :sm="8">
+                                                    <el-card shadow="hover" style="margin-bottom: 15px; border-radius: 8px; text-align: center; height: 140px;">
+                                                        <div style="color: #409eff; font-size: 14px; margin-bottom: 8px; font-weight: 600;">VerifyResult</div>
+                                                        <div :style="{fontSize: '16px', fontWeight: 'bold', color: results.VerifyResult === 'success' ? '#67c23a' : '#f56c6c'}">{{results.VerifyResult === 'success' ? '验证成功' : '验证失败'}}</div>
+                                                        <div style="font-size: 12px; color: #666; margin-top: 5px;">验证结果</div>
+                                                    </el-card>
+                                                </el-col>
+                                                <el-col :xs="24" :sm="8">
+                                                    <el-card shadow="hover" style="margin-bottom: 15px; border-radius: 8px; text-align: center; height: 140px;">
+                                                        <div style="color: #409eff; font-size: 14px; margin-bottom: 8px; font-weight: 600;">VerificationMessageMatch</div>
+                                                        <div :style="{fontSize: '16px', fontWeight: 'bold', color: results.VerificationMessageMatch === 'match' ? '#67c23a' : '#f56c6c'}">{{results.VerificationMessageMatch === 'match' ? '匹配' : '不匹配'}}</div>
+                                                        <div style="font-size: 12px; color: #666; margin-top: 5px;">与明文是否匹配</div>
+                                                    </el-card>
+                                                </el-col>
+                                            </el-row>
+                                        </div>
+                                    </div>
+                                </div>
+                            </el-card>
+                        </el-col>
+                    </el-row>
+                </div>
+            </div>
+        </el-main>
+
+        <!-- 底部操作栏 -->
+        <div style="bottom: 0; width: 100%; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); border-top: 1px solid #e0e0e0; z-index: 1000; padding: 20px 0;">
+            <div style="display: flex; justify-content: center; align-items: center;">
+                <button 
+                    onclick="window.location.href='../menu.html'" 
+                    style="
+                        background:rgba(12, 94, 177, 0.3);
+                        color: white;
+                        border: none;
+                        padding: 12px 30px;
+                        font-size: 16px;
+                        font-weight: 600;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+                        min-width: 120px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 8px;
+                    "
+                    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(64, 158, 255, 0.6)'"
+                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(64, 158, 255, 0.4)'"
+                >
+                    <span style="font-size: 14px; margin-right: 4px;">←</span>
+                    返回菜单
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../static/js/vue-v2.6.11.js"></script>
+    <script src="../../static/js/element-ui@2.13.0-index.js"></script>
+    <script src="../../static/js/jquery.js"></script>
+    <script>
+      new Vue({
+        el: "#app",
+        data() {
+          return {
+            activeFunction: "lattice_sign",
+            activeSubFunction: "key_generation",
+            isGenerating: false,
+            isSigning: false,
+            isVerifying: false,
+            isSettingUpRing: false,
+            functionList: [
+              { key: "lattice_sign", label: "格签名算法" },
+            ],
+            keyParams: {
+              securityLevel: "128",
+              dimension: "",
+              modulus: "",
+            },
+            signParams: {
+              message: "",
+              privateKey: "",
+              publicKey: "",
+              signature: "",
+            },
+            paramFileName: "",
+            messageFileName: "",
+            results: {
+              Kengen_time: "",
+              Seed: "",
+              Privatekey: "",
+              PublicKey: "",
+              PlaintextLength: "",
+              Plaintext: "",
+              Signature_time: "",
+              SignatureLength: "",
+              Signature: "",
+              Verify_time: "",
+              VerifyResult: "",
+              VerificationMessageMatch: "",
+            },
+          };
+        },
+        computed: {
+          hasResults() {
+            return (
+              this.results.Kengen_time || this.results.Signature_time || 
+              this.results.Verify_time || this.results.PublicKey ||
+              this.results.Privatekey || this.results.Signature
+            );
+          },
+        },
+        methods: {
+          selectFunction(func) {
+            this.activeFunction = func;
+            this.clearResults();
+            // 自动选择第一个子功能
+            if (func === "lattice_sign") {
+              this.activeSubFunction = "key_generation";
+            }
+          },
+          selectSubFunction(subFunc) {
+            this.activeSubFunction = subFunc;
+            this.clearResults();
+          },
+          handleParamFileUpload(file) {
+            this.paramFileName = file.name;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              try {
+                const content = e.target.result;
+                // 尝试解析JSON格式的参数文件
+                const params = JSON.parse(content);
+                if (params.securityLevel) this.keyParams.securityLevel = params.securityLevel;
+                if (params.dimension) this.keyParams.dimension = params.dimension;
+                if (params.modulus) this.keyParams.modulus = params.modulus;
+                this.$message.success('参数文件加载成功！');
+              } catch (error) {
+                // 如果不是JSON，尝试解析为普通文本
+                const lines = content.split('\n');
+                lines.forEach(line => {
+                  if (line.includes('securityLevel:')) {
+                    this.keyParams.securityLevel = line.split(':')[1].trim();
+                  } else if (line.includes('dimension:')) {
+                    this.keyParams.dimension = line.split(':')[1].trim();
+                  } else if (line.includes('modulus:')) {
+                    this.keyParams.modulus = line.split(':')[1].trim();
+                  }
+                });
+                this.$message.success('参数文件加载成功！');
+              }
+            };
+            reader.readAsText(file);
+            return false; // 阻止默认上传行为
+          },
+          handleMessageFileUpload(file) {
+            this.messageFileName = file.name;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              this.signParams.message = e.target.result;
+              this.$message.success('消息文件加载成功！');
+            };
+            reader.readAsText(file);
+            return false; // 阻止默认上传行为
+          },
+          async generateKeys() {
+            if (!this.keyParams.securityLevel || !this.keyParams.dimension || !this.keyParams.modulus) {
+              this.$message.warning("请填写完整的密钥参数");
+              return;
+            }
+
+            this.isGenerating = true;
+
+            // 模拟密钥生成过程
+            await this.simulateDelay(2000);
+
+            // 生成随机种子
+            const seed = this.generateRandomHex(32);
+            
+            // 生成模拟的密钥对
+            const keyLength = Math.floor(Math.random() * 300 + 200); // 200-500字符长度
+            const publicKey = this.generateRandomHex(keyLength);
+            const privateKey = this.generateRandomHex(keyLength);
+            
+            // 记录密钥生成时间
+            const keyGenTime = (1.5 + Math.random() * 1).toFixed(2) + "s";
+
+            this.results.Kengen_time = keyGenTime;
+            this.results.Seed = seed;
+            this.results.PublicKey = publicKey;
+            this.results.Privatekey = privateKey;
+            
+            // 将密钥同步到签名参数中
+            this.signParams.privateKey = privateKey;
+            this.signParams.publicKey = publicKey;
+
+            this.isGenerating = false;
+            this.$message.success("密钥对生成成功！");
+          },
+          async signMessage() {
+            if (!this.signParams.message) {
+              this.$message.warning("请输入要签名的消息");
+              return;
+            }
+
+            if (!this.signParams.privateKey) {
+              this.$message.warning("请先生成密钥对");
+              return;
+            }
+
+            this.isSigning = true;
+
+            // 模拟签名过程
+            await this.simulateDelay(1500);
+
+            // 计算明文长度（字节）
+            const plaintextLength = new Blob([this.signParams.message]).size;
+            
+            // 生成模拟的签名
+            const sigLength = Math.floor(Math.random() * 200 + 150); // 150-350字符长度
+            const signature = this.generateRandomHex(sigLength);
+            
+            // 记录签名时间
+            const signTime = (0.5 + Math.random() * 0.5).toFixed(2) + "s";
+            const signatureLength = Math.floor(sigLength / 2) + " bytes";
+
+            this.results.PlaintextLength = plaintextLength + " bytes";
+            this.results.Plaintext = this.signParams.message;
+            this.results.Signature_time = signTime;
+            this.results.SignatureLength = signatureLength;
+            this.results.Signature = signature;
+            
+            // 将签名同步到签名参数中
+            this.signParams.signature = signature;
+
+            this.isSigning = false;
+            this.$message.success("消息签名成功！");
+          },
+          async verifySignature() {
+            if (!this.signParams.signature || !this.signParams.publicKey || !this.signParams.message) {
+              this.$message.warning("请确保有签名、公钥和消息");
+              return;
+            }
+
+            this.isVerifying = true;
+
+            // 模拟验证过程
+            await this.simulateDelay(1000);
+
+            // 模拟验证结果，95%成功率
+            const verifySuccess = Math.random() > 0.05;
+            const messageMatch = Math.random() > 0.1; // 90%匹配率
+            
+            // 记录验证时间
+            const verifyTime = (0.2 + Math.random() * 0.3).toFixed(2) + "s";
+
+            this.results.Verify_time = verifyTime;
+            this.results.VerifyResult = verifySuccess ? 'success' : 'failed';
+            this.results.VerificationMessageMatch = messageMatch ? 'match' : 'mismatch';
+
+            this.isVerifying = false;
+            
+            if (verifySuccess && messageMatch) {
+              this.$message.success("签名验证成功，消息匹配！");
+            } else if (verifySuccess && !messageMatch) {
+              this.$message.warning("签名验证成功，但消息不匹配！");
+            } else {
+              this.$message.error("签名验证失败！");
+            }
+          },
+          clearResults() {
+            this.results = {
+              Kengen_time: "",
+              Seed: "",
+              Privatekey: "",
+              PublicKey: "",
+              PlaintextLength: "",
+              Plaintext: "",
+              Signature_time: "",
+              SignatureLength: "",
+              Signature: "",
+              Verify_time: "",
+              VerifyResult: "",
+              VerificationMessageMatch: "",
+            };
+            this.signParams.signature = "";
+          },
+          generateRandomHex(length) {
+            let hex = "0x";
+            for (let i = 0; i < length; i++) {
+              hex += Math.floor(Math.random() * 16).toString(16).toUpperCase();
+            }
+            return hex;
+          },
+          simulateDelay(ms) {
+            return new Promise((resolve) => setTimeout(resolve, ms));
+          },
+        },
+      });
+    </script>
+  </body>
+</html>

@@ -10,7 +10,7 @@
 <body>
     <div id="app">
         <el-header>
-            <h2>展示模块</h2>
+            <h2>非结构格加密</h2>
         </el-header>
 
         <el-main>
@@ -29,14 +29,7 @@
                         <el-form-item style="margin-left: 20px;">
                             <el-button @click="backToMenu">返回菜单</el-button>
                         </el-form-item>
-                        <!-- <el-form-item style="margin-left: 20px;">
-                    <el-button type="primary" :loading="isLoading" @click="batchInstance"
-                      >批量生成</el-button
-                    >
-                  </el-form-item> -->
-                        <el-label v-model="formData.seed" type="textarea" style="flex: 2; margin-left: 20px; font-size: 18px" :rows="2">秘钥生成时间：{{formData.gen_time}}s 加密时间：{{formData.enc_time}}s 解密时间：{{formData.dec_time}}s
-                            <!-- 准确率：{{formData.accuracy}} -->
-                        </el-label>
+                        <el-label v-model="formData.seed" type="textarea" style="flex: 2; margin-left: 20px; font-size: 18px" :rows="2">秘钥生成时间：{{formData.gen_time}}s 加密时间：{{formData.enc_time}}s 解密时间：{{formData.dec_time}}s</el-label>
                         <el-label v-if="formData.isSuccess" style=" color: goldenrod;font-weight: bold; font-size: 18px">解密成功！</el-label>
                     </div>
                 </el-form-item>
@@ -140,9 +133,14 @@
                     });
                 },
                 backToMenu() {
-                    window.location.href = "menu.html";
+                    window.location.href = "../menu.html";
                 },
                 batchInstance() {
+
+
+
+
+                    
                     this.isLoading = true;
                     let that = this.formData;
                     let tt = this;

@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>安全性评估 - 格密码算法系统</title>
+    <link
+      rel="stylesheet"
+      href="../../static/css/element-ui@2.13.0-theme-chalk-index.css"
+    />
+    <style>
+      html,
+      body {
+        height: 100vh;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+      }
+      #app {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      .main-container {
+        width: 100%;
+        padding: 0 10px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+      .algorithm-selection {
+        min-height: 150px;
+      }
+      .content-area {
+        flex: 1;
+        overflow-y: auto;
+        min-height: 0;
+      }
+      @media (min-width: 1200px) {
+        .main-container {
+          padding: 0 15px;
+        }
+      }
+      @media (max-width: 768px) {
+        .main-container {
+          padding: 0 5px;
+        }
+      }
+      .param-item {
+        background: #f5f7fa;
+        padding: 6px;
+        border-radius: 6px;
+        height: 100%;
+        font-size: 11px;
+      }
+      .param-key {
+        color: #409eff;
+        font-weight: bold;
+      }
+      .eval-card {
+        margin-bottom: 15px;
+        border-radius: 8px;
+      }
+      .result-item {
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        border-left: 4px solid;
+      }
+      .result-overall {
+        background: #f0f9ff;
+        border-left-color: #409eff;
+      }
+      .result-classical {
+        background: #fff7e6;
+        border-left-color: #e6a23c;
+      }
+      .result-quantum {
+        background: #f0f9ff;
+        border-left-color: #67c23a;
+      }
+      /* 防止横向滚动条 */
+      .el-form {
+        max-width: 100%;
+        overflow-x: hidden;
+      }
+      .el-form-item__label {
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        line-height: 1.4 !important;
+        color: #409eff !important;
+      }
+      .el-form-item__label::after {
+        content: '：' !important;
+      }
+      .el-input {
+        width: 100% !important;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="app">
+      <!-- 顶部标题栏 -->
+      <el-header style="height: auto; padding: 10px 0">
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 10px;
+          "
+        >
+          <img
+            src="../../static/img/bupt.png"
+            alt="BUPT Logo"
+            style="width: 160px; height: 48px; margin-right: 20px"
+          />
+          <h2 style="margin: 0; text-align: center; font-size: 22px">
+            安全性评估系统
+          </h2>
+        </div>
+      </el-header>
+      <el-main class="main-container">
+        <div class="content-area">
+          <el-card
+            shadow="hover"
+            style="
+              border-radius: 12px;
+              box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+              height: 100%;
+            "
+          >
+            <div slot="header" style="text-align: center; padding: 15px">
+              <h2
+                style="
+                  margin: 0;
+                  color: #409eff;
+                  font-weight: 600;
+                  font-size: 20px;
+                "
+              >
+                安全性评估系统
+              </h2>
+              <p style="margin: 8px 0 0 0; color: #666; font-size: 14px">
+                请选择算法类型进行安全性评估
+              </p>
+            </div>
+
+            <el-row :gutter="15" style="height: calc(100vh - 180px); min-height: 500px;">
+              <!-- 算法选择区域 -->
+              <el-col
+                :xs="24"
+                :sm="24"
+                :md="7"
+                :lg="5"
+                class="algorithm-selection"
+                style="margin-bottom: 15px;"
+              >
+                <el-card
+                  shadow="hover"
+                  style="
+                    border-radius: 10px;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                    height: 100%;
+                    min-height: 300px;
+                  "
+                >
+                  <div slot="header" style="text-align: center; padding: 10px">
+                    <h4 style="margin: 0; color: #409eff; font-weight: 600; font-size: 16px;">
+                      算法选择
+                    </h4>
+                  </div>
+                  <div
+                    style="
+                      display: flex;
+                      flex-direction: column;
+                      gap: 10px;
+                      padding: 5px;
+                      height: calc(100% - 60px);
+                      overflow-y: auto;
+                      align-items: center;
+                    "
+                  >
+                    <el-button
+                      v-for="algorithm in algorithmList"
+                      :key="algorithm.key"
+                      :type="activeAlgorithm === algorithm.key ? 'primary' : ''"
+                      :plain="activeAlgorithm !== algorithm.key"
+                      @click="selectAlgorithm(algorithm.key)"
+                      style="
+                        margin-left:10px;
+                        width: 95%;
+                        height: 60px;
+                        white-space: normal;
+                        line-height: 1.3;
+                        padding: 10px;
+                        border-radius: 8px;
+                        font-weight: 600;
+                        font-size: 13px;
+                        box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
+                        transition: all 0.3s ease;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        text-align: center;
+                      "
+                      size="small"
+                    >
+                      {{algorithm.label}}
+                    </el-button>
+                  </div>
+                </el-card>
+              </el-col>
+
+              <!-- 中间内容区域 -->
+              <el-col :xs="24" :sm="24" :md="17" :lg="19">
+                <el-card
+                  shadow="hover"
+                  style="
+                    border-radius: 10px;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                    height: 100%;
+                    overflow: hidden;
+                  "
+                >
+                  <div slot="header" style="text-align: center; padding: 10px">
+                    <h4 style="margin: 0; color: #409eff; font-weight: 600; font-size: 16px;">
+                      安全性评估
+                    </h4>
+                  </div>
+
+                  <div style="height: calc(100% - 60px); overflow-y: auto; padding: 0;">
+                  <!-- 算法选择提示 -->
+                  <div
+                    v-if="!activeAlgorithm"
+                    style="padding: 40px; text-align: center"
+                  >
+                    <el-alert
+                      title="请选择要进行安全性评估的算法"
+                      type="info"
+                      :closable="false"
+                      style="border-radius: 8px"
+                    >
+                    </el-alert>
+                  </div>
+
+                  <!-- 共用参数说明区域 -->
+                  <div v-if="activeAlgorithm" style="padding: 15px">
+                    <el-alert
+                      :title="currentAlgorithmConfig.label"
+                      :type="activeAlgorithm === 'pblpke' ? 'success' : 'warning'"
+                      :closable="false"
+                      style="margin-bottom: 15px; border-radius: 8px"
+                    >
+                    </el-alert>
+                    
+                    <!-- 参数说明 -->
+                    <el-card shadow="hover" style="margin-bottom: 15px; border-radius: 8px;">
+                      <div slot="header" style="padding: 8px">
+                        <h5 style="margin: 0; color: #409eff; font-size: 14px;">
+                          安全性评估参数说明
+                        </h5>
+                      </div>
+                      <el-row :gutter="10" style="padding: 8px">
+                        <el-col
+                          :xs="24"
+                          :sm="12"
+                          :md="8"
+                          :lg="6"
+                          v-for="param in currentParams"
+                          :key="param.key"
+                          style="margin-bottom: 8px"
+                        >
+                          <div class="param-item" style="padding: 6px; font-size: 11px;">
+                            <span class="param-key">{{param.key}}:</span>
+                            {{param.desc}}
+                          </div>
+                        </el-col>
+                      </el-row>
+                    </el-card>
+
+                    <!-- 评估模块 -->
+                    <div v-if="activeAlgorithm">
+                        <el-card shadow="hover" style="margin-bottom: 15px; border-radius: 8px;">
+                            <div slot="header" style="padding: 8px;">
+                                <h5 style="margin: 0; color: #409eff; font-size: 14px;">{{currentAlgorithmConfig.label.split('的')[0]}}评估模块</h5>
+                            </div>
+                            <el-form :model="evaluationParams" label-width="120px" style="padding: 8px; max-width: 100%; overflow-x: hidden;">
+                                <el-row :gutter="15">
+                                    <el-col :xs="24" :sm="12" :md="12" :lg="8">
+                                        <el-form-item label="n">
+                                            <el-input v-model="evaluationParams.n" placeholder="请输入n值" style="border-radius: 6px;"></el-input>
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :xs="24" :sm="12" :md="12" :lg="8">
+                                        <el-form-item label="q">
+                                            <el-input v-model="evaluationParams.q" placeholder="请输入q值" style="border-radius: 6px;"></el-input>
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :xs="24" :sm="12" :md="12" :lg="8">
+                                        <el-form-item label="m">
+                                            <el-input v-model="evaluationParams.m" placeholder="请输入m值" style="border-radius: 6px;"></el-input>
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                                <el-row :gutter="15">
+                                    <el-col :xs="24" :sm="12" :md="12" :lg="8">
+                                        <el-form-item label="秘密向量s的σ">
+                                            <el-input v-model="evaluationParams.s_sigma" placeholder="标准差" style="border-radius: 6px;"></el-input>
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :xs="24" :sm="12" :md="12" :lg="8">
+                                        <el-form-item label="秘密向量s的c">
+                                            <el-input v-model="evaluationParams.s_c" placeholder="均值" style="border-radius: 6px;"></el-input>
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :xs="24" :sm="12" :md="12" :lg="8">
+                                        <el-form-item label="秘密向量e的σ">
+                                            <el-input v-model="evaluationParams.e_sigma" placeholder="标准差" style="border-radius: 6px;"></el-input>
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                                <el-row :gutter="15">
+                                    <el-col :xs="24" :sm="12" :md="12" :lg="8">
+                                        <el-form-item label="秘密向量e的c">
+                                            <el-input v-model="evaluationParams.e_c" placeholder="均值" style="border-radius: 6px;"></el-input>
+                                        </el-form-item>
+                                    </el-col>
+                                    <el-col :xs="24" :sm="12" :md="12" :lg="8">
+                                        <el-form-item label="安全强度级别">
+                                            <el-select v-model="evaluationParams.securityLevel" placeholder="请选择安全强度" style="width: 100%; border-radius: 6px;">
+                                                <el-option label="128bit" value="128"></el-option>
+                                                <el-option label="192bit" value="192"></el-option>
+                                                <el-option label="256bit" value="256"></el-option>
+                                                <el-option v-if="activeAlgorithm === 'pblpke' " label="384bit" value="384"></el-option>
+                                            </el-select>
+                                        </el-form-item>
+                                    </el-col>
+                                </el-row>
+                                
+                                <div style="text-align: center; margin-top: 15px;">
+                                    <el-button
+                                        :type="activeAlgorithm === 'pblpke' ? 'success' : 'warning'"
+                                        @click="evaluateAlgorithm"
+                                        :loading="isEvaluating"
+                                        style="padding: 10px 25px; font-weight: 600; border-radius: 8px;"
+                                        size="medium">
+                                        <i class="el-icon-cpu" style="margin-right: 6px"></i>
+                                        开始评估
+                                    </el-button>
+                                </div>
+                            </el-form>
+                        </el-card>
+
+                        <!-- 评估结果 -->
+                        <div v-if="evaluationResults" style="margin-top: 15px;">
+                            <el-card shadow="hover" style="margin-bottom: 15px; border-radius: 8px;">
+                                <div slot="header" style="padding: 8px;">
+                                    <h5 style="margin: 0; font-size: 14px;" :style="{color: activeAlgorithm === 'pblpke' ? '#67c23a' : '#e6a23c'}">{{currentAlgorithmConfig.label.split('的')[0]}}算法整体安全性</h5>
+                                </div>
+                                <el-row :gutter="15" style="padding: 8px;">
+                                    <el-col :xs="24" :sm="8">
+                                        <div class="result-item result-classical" style="padding: 12px; margin-bottom: 10px;">
+                                            <h6 style="margin: 0 0 8px 0; color: #e6a23c; font-size: 13px;">经典算法强度</h6>
+                                            <p style="margin: 0; font-size: 15px; font-weight: 600;">{{evaluationResults.classical}}</p>
+                                        </div>
+                                    </el-col>
+                                    <el-col :xs="24" :sm="8">
+                                        <div class="result-item result-quantum" style="padding: 12px; margin-bottom: 10px;">
+                                            <h6 style="margin: 0 0 8px 0; color: #67c23a; font-size: 13px;">量子安全强度</h6>
+                                            <p style="margin: 0; font-size: 15px; font-weight: 600;">{{evaluationResults.quantum}}</p>
+                                        </div>
+                                    </el-col>
+                                </el-row>
+                            </el-card>
+                        </div>
+
+                        <!-- 详细安全性输出模块 -->
+                        <div v-if="detailedResults" style="margin-top: 15px;">
+                            <!-- PBLPKE详细结果 -->
+                            <div v-if="activeAlgorithm === 'pblpke'">
+                                <el-card shadow="hover" style="margin-bottom: 15px; border-radius: 8px;">
+                                    <div slot="header" style="padding: 8px;">
+                                        <h5 style="margin: 0; color: #67c23a; font-size: 14px;">PBLPKE安全性评估详细结果</h5>
+                                    </div>
+                                    <div style="padding: 15px; font-family: monospace; background: #f8f9fa; border-radius: 6px; font-size: 12px; line-height: 1.6;">
+                                        <div style="display: flex; justify-content: space-between;">
+                                            <!-- 原始攻击 -->
+                                            <div style="width: 30%;">
+                                                <strong style="color: #409eff;">原始攻击</strong><br/>
+                                                rop: ≈2^{{detailedResults.pblpke.original.rop}}<br/>
+                                                red: ≈2^{{detailedResults.pblpke.original.red}}<br/>
+                                                δ: {{detailedResults.pblpke.original.delta}}<br/>
+                                                β: {{detailedResults.pblpke.original.beta}}<br/>
+                                                d: {{detailedResults.pblpke.original.d}}<br/>
+                                                tag: {{detailedResults.pblpke.original.tag}}
+                                            </div>
+                                            <!-- 混合原始 -->
+                                            <div style="width: 30%;">
+                                                <strong style="color: #409eff;">混合原始</strong><br/>
+                                                rop: ≈2^{{detailedResults.pblpke.hybrid.rop}}<br/>
+                                                red: ≈2^{{detailedResults.pblpke.hybrid.red}}<br/>
+                                                svp: ≈2^{{detailedResults.pblpke.hybrid.svp}}<br/>
+                                                β: {{detailedResults.pblpke.hybrid.beta}}<br/>
+                                                η: {{detailedResults.pblpke.hybrid.eta}}<br/>
+                                                ζ: {{detailedResults.pblpke.hybrid.zeta}}<br/>
+                                                |S|: {{detailedResults.pblpke.hybrid.s}}<br/>
+                                                d: {{detailedResults.pblpke.hybrid.d}}<br/>
+                                                prob: {{detailedResults.pblpke.hybrid.prob}}<br/>
+                                                U: {{detailedResults.pblpke.hybrid.u}}<br/>
+                                                tag: {{detailedResults.pblpke.hybrid.tag}}
+                                            </div>
+                                            <!-- 右侧信息 -->
+                                            <div style="width: 35%;">
+                                                <strong style="color: #409eff;">[PKC:NM24]:Two_step_estimator_MATZOV22</strong><br/>
+                                                log rop: {{detailedResults.pblpke.info.log_rop}}<br/>
+                                                dim: {{detailedResults.pblpke.info.dim}}<br/>
+                                                ln(dvol): {{detailedResults.pblpke.info.ln_dvol}}<br/>
+                                                β_strategy: {{detailedResults.pblpke.info.beta_strategy}}<br/>
+                                                dsvp: {{detailedResults.pblpke.info.dsvp}}<br/>
+                                                dsvp_prime: {{detailedResults.pblpke.info.dsvp_prime}}<br/>
+                                                G: {{detailedResults.pblpke.info.g}} log2(gate)<br/>
+                                                B: {{detailedResults.pblpke.info.b}} log2(bit)<br/>
+                                                tag: {{detailedResults.pblpke.info.tag}}
+                                            </div>
+                                        </div>
+                                        <div style="margin-top: 15px; display: flex; justify-content: space-between;">
+                                            <!-- 对偶攻击 -->
+                                            <div style="width: 30%;">
+                                                <strong style="color: #409eff;">对偶攻击</strong><br/>
+                                                rop: ≈2^{{detailedResults.pblpke.dual.rop}}<br/>
+                                                mem: ≈2^{{detailedResults.pblpke.dual.mem}}<br/>
+                                                m: {{detailedResults.pblpke.dual.m}}<br/>
+                                                β: {{detailedResults.pblpke.dual.beta}}<br/>
+                                                d: {{detailedResults.pblpke.dual.d}}<br/>
+                                                U: {{detailedResults.pblpke.dual.u}}<br/>
+                                                tag: {{detailedResults.pblpke.dual.tag}}
+                                            </div>
+                                            <!-- 混合对偶 -->
+                                            <div style="width: 30%;">
+                                                <strong style="color: #409eff;">混合对偶</strong><br/>
+                                                rop: ≈2^{{detailedResults.pblpke.hybrid_dual.rop}}<br/>
+                                                mem: ≈2^{{detailedResults.pblpke.hybrid_dual.mem}}<br/>
+                                                m: {{detailedResults.pblpke.hybrid_dual.m}}<br/>
+                                                k: {{detailedResults.pblpke.hybrid_dual.k}}<br/>
+                                                U: ≈2^{{detailedResults.pblpke.hybrid_dual.u}}<br/>
+                                                β: {{detailedResults.pblpke.hybrid_dual.beta}}<br/>
+                                                d: {{detailedResults.pblpke.hybrid_dual.d}}<br/>
+                                                ζ: {{detailedResults.pblpke.hybrid_dual.zeta}}<br/>
+                                                hl: {{detailedResults.pblpke.hybrid_dual.hl}}<br/>
+                                                tag: {{detailedResults.pblpke.hybrid_dual.tag}}
+                                            </div>
+                                            <!-- 右下角信息 -->
+                                            <div style="width: 35%;">
+                                                <strong style="color: #409eff;">[PKC:NM24]:Two_step_estimator_simple</strong><br/>
+                                                log rop: {{detailedResults.pblpke.simple.log_rop}}<br/>
+                                                dim: {{detailedResults.pblpke.simple.dim}}<br/>
+                                                ln(dvol): {{detailedResults.pblpke.simple.ln_dvol}}<br/>
+                                                β: {{detailedResults.pblpke.simple.beta}}<br/>
+                                                dsvp: {{detailedResults.pblpke.simple.dsvp}}<br/>
+                                                tag: {{detailedResults.pblpke.simple.tag}}
+                                            </div>
+                                        </div>
+                                        <div style="margin-top: 15px;">
+                                            <!-- 代数攻击 -->
+                                            <div style="width: 30%;">
+                                                <strong style="color: #409eff;">代数攻击</strong><br/>
+                                                rop: ≈2^{{detailedResults.pblpke.algebraic.rop}}<br/>
+                                                m: {{detailedResults.pblpke.algebraic.m}}<br/>
+                                                t: {{detailedResults.pblpke.algebraic.t}}<br/>
+                                                mem: ≈2^{{detailedResults.pblpke.algebraic.mem}}<br/>
+                                                tag: {{detailedResults.pblpke.algebraic.tag}}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </el-card>
+                            </div>
+
+                            <!-- PBLSign详细结果 -->
+                            <div v-if="activeAlgorithm === 'pblsign'">
+                                <el-card shadow="hover" style="margin-bottom: 15px; border-radius: 8px;">
+                                    <div slot="header" style="padding: 8px;">
+                                        <h5 style="margin: 0; color: #e6a23c; font-size: 14px;">PBLSign签名算法安全性评估详细结果</h5>
+                                    </div>
+                                    <div style="padding: 15px;">
+                                        <!-- 评估结果 -->
+                                        <div style="border: 2px solid #068738; padding: 15px; margin-bottom: 20px; border-radius: 6px;">
+                                            <h6 style="color: #068738; margin: 0 0 10px 0;">评估结果</h6>
+                                            <div style="font-family: monospace; font-size: 12px; line-height: 1.6;">
+                                                rop: ≈2^{{detailedResults.pblsign.result.rop}}<br/>
+                                                red: ≈2^{{detailedResults.pblsign.result.red}}<br/>
+                                                sieve: ≈2^{{detailedResults.pblsign.result.sieve}}<br/>
+                                                β: {{detailedResults.pblsign.result.beta}}<br/>
+                                                η: {{detailedResults.pblsign.result.eta}}<br/>
+                                                ζ: {{detailedResults.pblsign.result.zeta}}<br/>
+                                                d: {{detailedResults.pblsign.result.d}}<br/>
+                                                prob: {{detailedResults.pblsign.result.prob}}<br/>
+                                                U: {{detailedResults.pblsign.result.u}}<br/>
+                                                tag: {{detailedResults.pblsign.result.tag}}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </el-card>
+                            </div>
+                        </div>
+                    </div>
+
+                  </div>
+                </el-card>
+              </el-col>
+            </el-row>
+          </el-card>
+        </div>
+      </el-main>
+      <!-- 底部操作栏 -->
+      <div
+        style="
+          bottom: 0;
+          width: 100%;
+          background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+          border-top: 1px solid #e0e0e0;
+          z-index: 1000;
+          padding: 20px 0;
+        "
+      >
+        <div
+          style="display: flex; justify-content: center; align-items: center"
+        >
+          <button
+            onclick="window.location.href='../menu.html'"
+            style="
+              background: rgba(12, 94, 177, 0.3);
+              color: white;
+              border: none;
+              padding: 12px 30px;
+              font-size: 16px;
+              font-weight: 600;
+              border-radius: 8px;
+              cursor: pointer;
+              transition: all 0.3s ease;
+              min-width: 120px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 8px;
+            "
+            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(64, 158, 255, 0.6)'"
+            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(64, 158, 255, 0.4)'"
+          >
+            <span style="font-size: 14px; margin-right: 4px">←</span>
+            返回菜单
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="../../static/js/vue-v2.6.11.js"></script>
+    <script src="../../static/js/element-ui@2.13.0-index.js"></script>
+    <script src="../../static/js/jquery.js"></script>
+    <script>
+      new Vue({
+        el: "#app",
+        data() {
+          return {
+            activeAlgorithm: "",
+            isEvaluating: false,
+            algorithmList: [
+              { key: "pblpke", label: "PBLPKE加密算法的安全性评估" },
+              { key: "pblsign", label: "PBLSign签名算法的安全性评估" },
+            ],
+            paramDescriptions: {
+              pblpke: [
+                { key: 'rop', desc: '总复杂度' },
+                { key: 'red', desc: '约化复杂度' },
+                { key: 'svP', desc: '搜索复杂度' },
+                { key: 'mem', desc: '总内存' },
+                { key: 'β', desc: 'BKZ块大小' },
+                { key: 'd', desc: '格维度' },
+                { key: 'η', desc: '最终BDD的调用维度' },
+                { key: 'δ', desc: '格基约化的根Hermite因子' },
+                { key: 'ζ', desc: '猜的个数' },
+                { key: '|S|', desc: '猜测搜索空间（与babai有关）' },
+                { key: 'prob', desc: '成功的概率' },
+                { key: 'U', desc: '重复攻击的频率：实际使用的样本数量' },
+                { key: 'hl', desc: '猜测坐标中非零分量的个数（如果秘密分布是稀疏的）' },
+                { key: 'k', desc: '中间相遇的拆分维度' }
+              ],
+              pblsign: [
+                { key: 'rop', desc: '总复杂度' },
+                { key: 'red', desc: '约化复杂度' },
+                { key: 'sieve', desc: '筛法复杂度' },
+                { key: 'β', desc: 'BKZ块大小' },
+                { key: 'η', desc: '筛法调用维度' },
+                { key: 'd', desc: '格维度' },
+                { key: 'ζ', desc: '猜的个数' },
+                { key: 'prob', desc: '成功概率' },
+                { key: 'U', desc: '重复供给的频率' }
+              ]
+            },
+            pblpkeParams: {
+              n: "",
+              q: "",
+              m: "",
+              s_sigma: "",
+              s_c: "",
+              e_sigma: "",
+              e_c: "",
+              securityLevel: "128"
+            },
+            pblsignParams: {
+              n: "",
+              q: "",
+              m: "",
+              s_sigma: "",
+              s_c: "",
+              e_sigma: "",
+              e_c: "",
+              securityLevel: "128"
+            },
+            pblpkeResults: null,
+            pblsignResults: null,
+            detailedResults: null,
+          };
+        },
+        computed: {
+          currentParams() {
+            return this.activeAlgorithm ? this.paramDescriptions[this.activeAlgorithm] : [];
+          },
+          currentAlgorithmConfig() {
+            return this.algorithmList.find(item => item.key === this.activeAlgorithm) || {};
+          },
+          evaluationParams() {
+            return this.activeAlgorithm === 'pblpke' ? this.pblpkeParams : this.pblsignParams;
+          },
+          evaluationResults() {
+            return this.activeAlgorithm === 'pblpke' ? this.pblpkeResults : this.pblsignResults;
+          }
+        },
+        methods: {
+          selectAlgorithm(algorithmKey) {
+            this.activeAlgorithm = algorithmKey;
+            // 清空之前的详细结果
+            this.detailedResults = null;
+            // 保持参数说明和评估模块可见，不清空结果
+          },
+          evaluateAlgorithm() {
+            const params = this.evaluationParams;
+            // 检查参数是否完整
+            if (!params.n || !params.q || !params.m || 
+                !params.s_sigma || !params.s_c || 
+                !params.e_sigma || !params.e_c || !params.securityLevel) {
+              this.$message.warning('请填写所有参数');
+              return;
+            }
+
+            this.isEvaluating = true;
+
+            // 模拟读取文件和评估过程
+            setTimeout(() => {
+              // 根据安全强度生成不同的结果
+              const securityLevel = params.securityLevel;
+              const results = {
+                overall: `${securityLevel} 安全级别`,
+                classical: `2^${securityLevel} 次操作`,
+                quantum: `2^${Math.floor(securityLevel/2)} 次操作`
+              };
+              
+              if (this.activeAlgorithm === 'pblpke') {
+                this.pblpkeResults = results;
+                // 生成PBLPKE详细结果
+                this.detailedResults = {
+                  pblpke: {
+                    original: {
+                      rop: '11.1',
+                      red: '11.1',
+                      delta: '1.011640',
+                      beta: '57',
+                      d: '250',
+                      tag: 'usvp'
+                    },
+                    hybrid: {
+                      rop: '26.1',
+                      red: '21.2',
+                      svp: '26.1',
+                      beta: '57',
+                      eta: '2',
+                      zeta: '0',
+                      s: '1',
+                      d: '257',
+                      prob: '0.004',
+                      u: '1063',
+                      tag: 'hybrid'
+                    },
+                    dual: {
+                      rop: '15.2',
+                      mem: '20.9',
+                      m: '128',
+                      beta: '71',
+                      d: '256',
+                      u: '1',
+                      tag: 'dual'
+                    },
+                    hybrid_dual: {
+                      rop: '86.0',
+                      mem: '62.6',
+                      m: '128',
+                      k: '65',
+                      u: '24.0',
+                      beta: '117',
+                      d: '189',
+                      zeta: '67',
+                      hl: '13',
+                      tag: 'dual_mitm_hybrid'
+                    },
+                    algebraic: {
+                      rop: '-2445.8',
+                      m: '0',
+                      t: '4',
+                      mem: '-2445.8',
+                      tag: 'arora-gb'
+                    },
+                    info: {
+                      log_rop: '28.549853',
+                      dim: '257',
+                      ln_dvol: '960.8203684',
+                      beta_strategy: '[50,...,56]',
+                      dsvp: '108',
+                      dsvp_prime: '91',
+                      g: '53.05 log2(gate)',
+                      b: '28.77 log2(bit)',
+                      tag: 'two-step'
+                    },
+                    simple: {
+                      log_rop: '28.549853',
+                      dim: '257',
+                      ln_dvol: '56.7942210',
+                      beta: '69',
+                      dsvp: '109',
+                      tag: 'two-step-simple'
+                    }
+                  }
+                };
+              } else {
+                this.pblsignResults = results;
+                // 生成PBLSign详细结果
+                this.detailedResults = {
+                  pblsign: {
+                    result: {
+                      rop: '97.9',
+                      red: '96.8',
+                      sieve: '96.9',
+                      beta: '365',
+                      eta: '368',
+                      zeta: '382',
+                      d: '1124',
+                      prob: '1',
+                      u: '1',
+                      tag: 'infinity'
+                    }
+                  }
+                };
+              }
+
+              this.isEvaluating = false;
+              this.$message.success(`${this.currentAlgorithmConfig.label.split('的')[0]}安全性评估完成`);
+            }, 2000);
+          },
+          backToMenu() {
+            window.location.href = "../menu.html";
+          },
+        },
+      });
+    </script>
+  </body>
+</html>

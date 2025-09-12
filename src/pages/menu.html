@@ -1,114 +1,150 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-
-<head>
+  <head>
     <meta charset="UTF-8" />
-    <title>格密码算法菜单</title>
-    <link rel="stylesheet" href="../static/css/element-ui@2.13.0-theme-chalk-index.css" />
-</head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>格密码算法系统</title>
 
-<body>
+    <!-- 外部样式 -->
+    <link
+      rel="stylesheet"
+      href="../static/css/element-ui@2.13.0-theme-chalk-index.css"
+    />
+    <link rel="stylesheet" href="../static/css/menu.css" />
+  </head>
+
+  <body>
     <div id="app">
-        <el-header>
-            <div style="display: flex; align-items: center; justify-content: center">
-                <img src="../static/img/bupt.png" alt="BUPT Logo" style="width: 200px; height: 60px; margin-right: 20px" />
-                <h2 style="margin: 0; text-align: center">格密码算法系统</h2>
-            </div>
-        </el-header>
+      <!-- 页面头部 -->
+      <el-header class="header-container">
+        <div class="header-content">
+          <img
+            src="../static/img/bupt.png"
+            alt="北京邮电大学 Logo"
+            class="logo"
+          />
+          <h2 class="title">格密码算法系统</h2>
+        </div>
+      </el-header>
 
-        <el-main style="
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          height: 80vh;
-        ">
-            <div style="width: 60%">
-                <el-card>
-                    <el-divider>算法选择</el-divider>
-                    <el-row :gutter="20" justify="center">
-                        <el-col :xs="24" :sm="12" :md="8" style="margin-bottom: 20px">
-                            <el-button type="primary" size="large" @click="selectAlgorithm('quantum')" style="
-                    width: 100%;
-                    height: 100px;
-                    font-size: 18px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                  ">
-                                量子算法攻击
-                            </el-button>
-                        </el-col>
-                        <el-col :xs="24" :sm="12" :md="8" style="margin-bottom: 20px">
-                            <el-button type="primary" size="large" @click="selectAlgorithm('signature')" style="
-                    width: 100%;
-                    height: 100px;
-                    font-size: 18px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                  ">
-                                格签名
-                            </el-button>
-                        </el-col>
-                    </el-row>
-                    <el-row :gutter="20" justify="center">
-                        <el-col :xs="24" :sm="12" :md="8" style="margin-bottom: 20px">
-                            <el-button type="primary" size="large" @click="selectAlgorithm('encryption')" style="
-                    width: 100%;
-                    height: 100px;
-                    font-size: 18px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                  ">
-                                非结构格加密
-                            </el-button>
-                        </el-col>
-                        <el-col :xs="24" :sm="12" :md="8" style="margin-bottom: 20px">
-                            <el-button type="primary" size="large" @click="selectAlgorithm('basis')" style="
-                    width: 100%;
-                    height: 100px;
-                    font-size: 18px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                  ">
-                                短格基生成
-                            </el-button>
-                        </el-col>
-                    </el-row>
-                </el-card>
+      <!-- 主体内容 -->
+      <el-main class="main-content">
+        <div class="card-wrapper">
+          <el-card
+            shadow="hover"
+            style="
+              border-radius: 12px;
+              box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            "
+          >
+            <div
+              slot="header"
+              class="card-header"
+              style="text-align: center; padding: 15px"
+            >
+              <h2>格密码算法系统</h2>
+              <p>请选择相应的算法模块</p>
             </div>
-        </el-main>
+
+            <div style="padding: 20px; text-align: center">
+              <!-- 第一行按钮 -->
+              <el-row :gutter="20" type="flex" justify="center">
+                <el-col
+                  :xs="24"
+                  :sm="12"
+                  :md="12"
+                  :lg="8"
+                  v-for="btn in buttons.slice(0, 3)"
+                  :key="btn.type"
+                >
+                  <el-button
+                    :type="btn.type"
+                    size="large"
+                    class="menu-button"
+                    :class="{ 'btn-settings': btn.plain }"
+                    :plain="btn.plain"
+                    @click="selectAlgorithm(btn.action)"
+                  >
+                    {{ btn.text }}
+                  </el-button>
+                </el-col>
+              </el-row>
+
+              <!-- 第二行按钮 -->
+              <el-row
+                :gutter="20"
+                type="flex"
+                justify="center"
+                style="margin-top: 10px"
+              >
+                <el-col
+                  :xs="24"
+                  :sm="12"
+                  :md="12"
+                  :lg="8"
+                  v-for="btn in buttons.slice(3)"
+                  :key="btn.type"
+                >
+                  <el-button
+                    :type="btn.type"
+                    size="large"
+                    class="menu-button"
+                    :class="{ 'btn-settings': btn.plain }"
+                    :plain="btn.plain"
+                    @click="selectAlgorithm(btn.action)"
+                  >
+                    {{ btn.text }}
+                  </el-button>
+                </el-col>
+              </el-row>
+            </div>
+          </el-card>
+        </div>
+      </el-main>
     </div>
 
+    <!-- JS 资源：建议异步加载或延迟执行 -->
     <script src="../static/js/vue-v2.6.11.js"></script>
     <script src="../static/js/element-ui@2.13.0-index.js"></script>
     <script src="../static/js/jquery.js"></script>
-    <script>
-        new Vue({
-            el: "#app",
-            data() {
-                return {};
-            },
-            methods: {
-                selectAlgorithm(type) {
-                    if (type === "encryption") {
-                        // 非结构格加密跳转到 keyGen.html
-                        window.location.href = "./LWECrypto/keyGen.html";
-                    } else if (type === "quantum") {
-                        // 量子算法攻击跳转到 Quantum/quantum.html
-                        window.location.href = "./Quantum/quantum.html";
-                    } else {
-                        // 其他算法暂时显示提示信息，因为相关页面可能不存在
-                        this.$alert("该功能正在开发中", "提示", {
-                            confirmButtonText: "确定",
-                        });
-                    }
-                },
-            },
-        });
-    </script>
-</body>
 
+    <script>
+      new Vue({
+        el: "#app",
+        data() {
+          return {
+            // 所有按钮配置集中管理，便于维护和扩展
+            buttons: [
+              { text: "量子算法攻击", type: "primary", action: "quantum" },
+              { text: "格签名", type: "success", action: "signature" },
+              { text: "非结构格加密", type: "warning", action: "encryption" },
+              { text: "短格基生成", type: "info", action: "basis" },
+              { text: "算法分析", type: "danger", action: "analysis" },
+              { text: "系统设置", type: "", plain: true, action: "settings" },
+            ],
+          };
+        },
+        methods: {
+          selectAlgorithm(type) {
+            const routes = {
+              encryption: "./parts/keyGen.html",
+              quantum: "./parts/quantum.html",
+              analysis: "./parts/analysis.html",
+              signature: "./parts/signature.html",
+              // 其他未实现的不配置
+            };
+
+            if (routes[type]) {
+              window.location.href = routes[type];
+            } else {
+              this.$alert("该功能正在开发中", "提示", {
+                confirmButtonText: "确定",
+                callback: () => console.log(`${type} 功能暂未开放`),
+              });
+            }
+          },
+        },
+      });
+    </script>
+  </body>
 </html>
