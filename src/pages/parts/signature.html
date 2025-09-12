@@ -96,7 +96,7 @@
                                     <el-divider content-position="left" style="margin-top: 0; font-weight: 600;">密钥生成</el-divider>
                                     <el-form :model="keyParams" label-width="120px" style="margin-top: 20px;">
                                         <el-row :gutter="20">
-                                            <el-col :xs="24" :sm="12" :md="8">
+                                            <!-- <el-col :xs="24" :sm="12" :md="8">
                                                 <el-form-item label="安全等级">
                                                     <el-select v-model="keyParams.securityLevel" placeholder="选择安全等级" style="width: 100%; border-radius: 6px;">
                                                         <el-option label="128 bit" value="128"></el-option>
@@ -104,8 +104,8 @@
                                                         <el-option label="256 bit" value="256"></el-option>
                                                     </el-select>
                                                 </el-form-item>
-                                            </el-col>
-                                            <el-col :xs="24" :sm="12" :md="8">
+                                            </el-col> -->
+                                            <!-- <el-col :xs="24" :sm="12" :md="8">
                                                 <el-form-item label="格维度 (n)">
                                                     <el-input
                                                         v-model="keyParams.dimension"
@@ -122,7 +122,7 @@
                                                         style="border-radius: 6px;"
                                                     ></el-input>
                                                 </el-form-item>
-                                            </el-col>
+                                            </el-col> -->
                                         </el-row>
                                         <el-row :gutter="20">
                                             <el-col :xs="24" :sm="12">
@@ -523,10 +523,10 @@
             return false; // 阻止默认上传行为
           },
           async generateKeys() {
-            if (!this.keyParams.securityLevel || !this.keyParams.dimension || !this.keyParams.modulus) {
-              this.$message.warning("请填写完整的密钥参数");
-              return;
-            }
+            //if (!this.keyParams.securityLevel || !this.keyParams.dimension || !this.keyParams.modulus) {
+            //  this.$message.warning("请填写完整的密钥参数");
+            //  return;
+            //}
 
             this.isGenerating = true;
 

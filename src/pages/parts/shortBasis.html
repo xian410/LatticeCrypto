@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>短格基生成 - 格密码算法系统</title>
+    <link
+      rel="stylesheet"
+      href="../../static/css/element-ui@2.13.0-theme-chalk-index.css"
+    />
+    <style>
+      #app {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      .param-key {
+        color: #409eff;
+        font-weight: bold;
+      }
+      .vector-input-group {
+        border: 1px solid #dcdfe6;
+        border-radius: 6px;
+        padding: 15px;
+        margin-bottom: 10px;
+        background: #fafafa;
+      }
+      .vector-input-header {
+        font-weight: 600;
+        color: #409eff;
+        margin-bottom: 10px;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="app">
+      <el-header style="height: auto; padding: 10px 0">
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 10px;
+          "
+        >
+          <img
+            src="../../static/img/bupt.png"
+            alt="BUPT Logo"
+            style="width: 160px; height: 48px; margin-right: 20px"
+          />
+          <h2 style="margin: 0; text-align: center; font-size: 22px">
+            短格基生成系统
+          </h2>
+        </div>
+      </el-header>
+
+      <el-main style="flex: 1; padding: 20px">
+        <el-card
+          shadow="hover"
+          style="
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+          "
+        >
+          <div slot="header" style="text-align: center; padding: 15px">
+            <h2
+              style="
+                margin: 0;
+                color: #409eff;
+                font-weight: 600;
+                font-size: 20px;
+              "
+            >
+              短格基生成系统
+            </h2>
+            <p style="margin: 8px 0 0 0; color: #666; font-size: 14px">
+              通过输入向量组生成其垂直格上的短格基
+            </p>
+          </div>
+
+          <el-row>
+            <!-- 主要内容 -->
+            <el-col :xs="24">
+              <el-alert
+                title="通过输入向量组生成其垂直格上的短格基"
+                type="info"
+                :closable="false"
+                style="margin-bottom: 20px"
+              ></el-alert>
+
+              <!-- 生成模块 -->
+              <el-card shadow="hover" style="margin-bottom: 20px">
+                <div slot="header">
+                  <h5 style="margin: 0; color: #409eff">短格基生成模块</h5>
+                </div>
+                <el-form :model="generationParams" label-width="120px">
+                  <el-row :gutter="15">
+                    <el-col :xs="24" :sm="8">
+                      <el-form-item label="向量维度 (n)">
+                        <el-input
+                          v-model="generationParams.dimension"
+                          @input="updateVectorInputs"
+                        ></el-input>
+                      </el-form-item>
+                    </el-col>
+                    <el-col :xs="24" :sm="8">
+                      <el-form-item label="向量个数 (r)">
+                        <el-input
+                          v-model="generationParams.vectorCount"
+                          @input="updateVectorInputs"
+                        ></el-input>
+                      </el-form-item>
+                    </el-col>
+                    <el-col :xs="24" :sm="8">
+                      <el-form-item label="模数 (q)">
+                        <el-input v-model="generationParams.modulus"></el-input>
+                      </el-form-item>
+                    </el-col>
+                  </el-row>
+
+                  <!-- 向量输入区域 -->
+                  <div v-if="vectorInputs.length > 0" style="margin-top: 20px">
+                    <el-divider content-position="left"
+                      >向量输入 (u_0 到 u_(r-1))</el-divider
+                    >
+                    <div
+                      v-for="(vector, index) in vectorInputs"
+                      :key="index"
+                      class="vector-input-group"
+                    >
+                      <div class="vector-input-header">向量 u_{{index}}:</div>
+                      <el-row :gutter="10">
+                        <el-col
+                          :xs="6"
+                          :sm="4"
+                          :md="3"
+                          v-for="(value, dimIndex) in vector"
+                          :key="dimIndex"
+                        >
+                          <el-input
+                            v-model="vectorInputs[index][dimIndex]"
+                            :placeholder="`[${dimIndex}]`"
+                            size="small"
+                          ></el-input>
+                        </el-col>
+                      </el-row>
+                    </div>
+                  </div>
+
+                  <div style="text-align: center; margin-top: 20px">
+                    <el-button
+                      type="success"
+                      @click="generateShortBasis"
+                      :loading="isGenerating"
+                      size="medium"
+                    >
+                      <i class="el-icon-cpu" style="margin-right: 6px"></i>
+                      开始生成短格基
+                    </el-button>
+                  </div>
+                </el-form>
+              </el-card>
+
+              <!-- 生成结果 -->
+              <div v-if="generationResults">
+                <el-card shadow="hover" style="margin-bottom: 20px">
+                  <div slot="header">
+                    <h5 style="margin: 0; color: #67c23a">短格基生成结果</h5>
+                  </div>
+                  <el-row :gutter="15">
+                    <el-col :xs="24" :sm="8">
+                      <div
+                        style="
+                          text-align: center;
+                          padding: 15px;
+                          background: #f0f9ff;
+                          border-radius: 8px;
+                        "
+                      >
+                        <div style="color: #67c23a; font-size: 13px">
+                          生成时间
+                        </div>
+                        <div
+                          style="
+                            font-size: 16px;
+                            font-weight: 600;
+                            margin-top: 5px;
+                          "
+                        >
+                          {{generationResults.generationTime}}
+                        </div>
+                      </div>
+                    </el-col>
+                    <el-col :xs="24" :sm="8">
+                      <div
+                        style="
+                          text-align: center;
+                          padding: 15px;
+                          background: #f0f9ff;
+                          border-radius: 8px;
+                        "
+                      >
+                        <div style="color: #67c23a; font-size: 13px">
+                          格基维度
+                        </div>
+                        <div
+                          style="
+                            font-size: 16px;
+                            font-weight: 600;
+                            margin-top: 5px;
+                          "
+                        >
+                          {{generationResults.basisDimension}}
+                        </div>
+                      </div>
+                    </el-col>
+                    <el-col :xs="24" :sm="8">
+                      <div
+                        style="
+                          text-align: center;
+                          padding: 15px;
+                          background: #f0f9ff;
+                          border-radius: 8px;
+                        "
+                      >
+                        <div style="color: #67c23a; font-size: 13px">
+                          矩阵维度
+                        </div>
+                        <div
+                          style="
+                            font-size: 16px;
+                            font-weight: 600;
+                            margin-top: 5px;
+                          "
+                        >
+                          {{generationResults.matrixDimension}}
+                        </div>
+                      </div>
+                    </el-col>
+                  </el-row>
+                </el-card>
+              </div>
+
+              <!-- 输出结果 -->
+              <div v-if="detailedResults">
+                <el-card shadow="hover">
+                  <div slot="header">
+                    <h5 style="margin: 0; color: #409eff">输出结果</h5>
+                  </div>
+                  <el-row :gutter="20">
+                    <el-col :xs="24" :sm="12">
+                      <div style="margin-bottom: 20px">
+                        <h6 style="color: #409eff; margin-bottom: 10px">
+                          垂直格上的短格基 A'
+                        </h6>
+                        <el-input
+                          v-model="detailedResults.shortBasis"
+                          type="textarea"
+                          :rows="8"
+                          readonly
+                          style="font-family: monospace; font-size: 11px"
+                          placeholder="短格基矩阵将在这里显示..."
+                        ></el-input>
+                      </div>
+                    </el-col>
+                    <el-col :xs="24" :sm="12">
+                      <div style="margin-bottom: 20px">
+                        <h6 style="color: #e6a23c; margin-bottom: 10px">
+                          扩展后的随机矩阵 Y
+                        </h6>
+                        <el-input
+                          v-model="detailedResults.randomMatrix"
+                          type="textarea"
+                          :rows="8"
+                          readonly
+                          style="font-family: monospace; font-size: 11px"
+                          placeholder="扩展随机矩阵将在这里显示..."
+                        ></el-input>
+                      </div>
+                    </el-col>
+                  </el-row>
+                </el-card>
+              </div>
+            </el-col>
+          </el-row>
+        </el-card>
+      </el-main>
+
+      <!-- 底部操作栏 -->
+      <div
+        style="
+          background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+          border-top: 1px solid #e0e0e0;
+          padding: 20px 0;
+        "
+      >
+        <div
+          style="display: flex; justify-content: center; align-items: center"
+        >
+          <button
+            onclick="window.location.href='../menu.html'"
+            style="
+              background: rgba(12, 94, 177, 0.3);
+              color: white;
+              border: none;
+              padding: 12px 30px;
+              font-size: 16px;
+              font-weight: 600;
+              border-radius: 8px;
+              cursor: pointer;
+              transition: all 0.3s ease;
+            "
+          >
+            <span style="font-size: 14px; margin-right: 4px">←</span>
+            返回菜单
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="../../static/js/vue-v2.6.11.js"></script>
+    <script src="../../static/js/element-ui@2.13.0-index.js"></script>
+    <script src="../../static/js/jquery.js"></script>
+    <script src="../../static/js/common.js"></script>
+    <script>
+      new Vue({
+        el: "#app",
+        data() {
+          return {
+            isGenerating: false,
+            generationParams: {
+              dimension: "",
+              vectorCount: "",
+              modulus: "",
+            },
+            generationResults: null,
+            detailedResults: null,
+            vectorInputs: [],
+          };
+        },
+
+        methods: {
+          updateVectorInputs() {
+            const dimension = parseInt(this.generationParams.dimension) || 0;
+            const vectorCount =
+              parseInt(this.generationParams.vectorCount) || 0;
+
+            if (
+              dimension > 0 &&
+              vectorCount > 0 &&
+              dimension <= 10 &&
+              vectorCount <= 5
+            ) {
+              this.vectorInputs = [];
+              for (let i = 0; i < vectorCount; i++) {
+                const vector = [];
+                for (let j = 0; j < dimension; j++) {
+                  vector.push("");
+                }
+                this.vectorInputs.push(vector);
+              }
+            } else {
+              this.vectorInputs = [];
+            }
+          },
+          async generateShortBasis() {
+            if (
+              !this.generationParams.dimension ||
+              !this.generationParams.vectorCount ||
+              !this.generationParams.modulus
+            ) {
+              this.$message.warning("请填写所有必要参数");
+              return;
+            }
+
+            if (this.vectorInputs.length === 0) {
+              this.$message.warning("请输入向量数据");
+              return;
+            }
+
+            for (let i = 0; i < this.vectorInputs.length; i++) {
+              for (let j = 0; j < this.vectorInputs[i].length; j++) {
+                if (!this.vectorInputs[i][j]) {
+                  this.$message.warning(`请完整填写向量 u_${i} 的所有分量`);
+                  return;
+                }
+              }
+            }
+
+            this.isGenerating = true;
+
+            try {
+              const params = {
+                dimension: parseInt(this.generationParams.dimension),
+                vectorCount: parseInt(this.generationParams.vectorCount),
+                modulus: this.generationParams.modulus,
+                vectors: this.vectorInputs,
+                timestamp: new Date().toISOString(),
+              };
+
+              // 写入参数到文件
+              if (typeof writeParamsToFile !== "undefined") {
+                await writeParamsToFile(
+                  "./data/shortbasis_params.json",
+                  params
+                );
+                console.log("参数已写入文件");
+              }
+
+              // 模拟调用可执行文件
+              await this.simulateExecutableCall();
+
+              // 从文件读取结果
+              await this.readResultsFromFile();
+
+              this.$message.success("短格基生成完成");
+            } catch (error) {
+              console.error("生成短格基时发生错误:", error);
+              this.$message.error("生成短格基失败: " + error.message);
+            }
+
+            this.isGenerating = false;
+          },
+          async simulateExecutableCall() {
+            console.log("模拟调用短格基生成可执行文件...");
+
+            if (typeof executeFile !== "undefined") {
+              try {
+                // 这里应该调用实际的可执行文件
+                // const result = await executeFile('./bin/shortbasis', ['--config', './data/shortbasis_params.json']);
+                await this.simulateDelay(3000);
+              } catch (error) {
+                console.log("使用模拟执行:", error.message);
+                await this.simulateDelay(3000);
+              }
+            } else {
+              await this.simulateDelay(3000);
+            }
+          },
+          async readResultsFromFile() {
+            console.log("模拟从文件读取结果...");
+
+            const generationTime = (2.5 + Math.random() * 2).toFixed(2) + "s";
+            const dimension = parseInt(this.generationParams.dimension);
+            const vectorCount = parseInt(this.generationParams.vectorCount);
+
+            this.generationResults = {
+              generationTime: generationTime,
+              basisDimension: `${dimension - vectorCount} × ${dimension}`,
+              matrixDimension: `${vectorCount} × ${dimension}`,
+            };
+
+            const shortBasisMatrix = this.generateMatrixString(
+              dimension - vectorCount,
+              dimension
+            );
+            const randomMatrix = this.generateMatrixString(
+              vectorCount,
+              dimension
+            );
+
+            this.detailedResults = {
+              shortBasis: shortBasisMatrix,
+              randomMatrix: randomMatrix,
+            };
+
+            if (typeof readParamsFromFile !== "undefined") {
+              try {
+                const results = await readParamsFromFile(
+                  "./data/shortbasis_results.json",
+                  {
+                    defaultValue: this.detailedResults,
+                  }
+                );
+                this.detailedResults = { ...this.detailedResults, ...results };
+              } catch (error) {
+                console.log("使用模拟结果:", error.message);
+              }
+            }
+          },
+          generateMatrixString(rows, cols) {
+            let matrix = "";
+            for (let i = 0; i < rows; i++) {
+              const row = [];
+              for (let j = 0; j < cols; j++) {
+                row.push(Math.floor(Math.random() * 100 - 50));
+              }
+              matrix += `[${row.join(", ")}]`;
+              if (i < rows - 1) matrix += "\n";
+            }
+            return matrix;
+          },
+          simulateDelay(ms) {
+            return new Promise((resolve) => setTimeout(resolve, ms));
+          },
+          backToMenu() {
+            window.location.href = "../menu.html";
+          },
+        },
+      });
+    </script>
+  </body>
+</html>
