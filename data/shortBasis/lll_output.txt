@@ -1,0 +1,9 @@
+algorithm=LLL
+dimension=3
+reducedMatrix=-46,37,4;17,-38,30;25,-30,-12;
+shortestVector=-1,-4,-3
+reductionRatio=0.6854
+iterations=48
+executionTime=0.725s
+qualityMetric=0.821086
+timestamp=1757926143971

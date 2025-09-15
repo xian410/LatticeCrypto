@@ -9,13 +9,15 @@ const config = {
   },
 
   // 数据目录配置
-  dataDir: path.join(__dirname, "../../data/quantum"),
+  dataDir: path.join(__dirname, "../../data"),
 
   // 子目录配置
   directories: {
-    lpn: "lpn",
-    sdes: "sdes",
-    sm4: "sm4",
+    quantum: "quantum",
+    analysis: "analysis",
+    keygen: "keyGen",
+    shortbasis: "shortBasis",
+    signature: "signature",
   },
 
   // 文件名配置
@@ -84,7 +86,21 @@ function getDataPath(category = "") {
  * 获取文件路径
  */
 function getFilePath(category, filename) {
-  return path.join(getDataPath(category), filename);
+  // quantum模块的特殊处理
+  if (["lpn", "sdes", "sm4"].includes(category)) {
+    return path.join(getDataPath("quantum"), filename);
+  }
+
+  // 其他模块使用对应的目录
+  const dirMapping = {
+    analysis: "analysis",
+    keygen: "keyGen",
+    shortbasis: "shortBasis",
+    signature: "signature",
+  };
+
+  const targetDir = dirMapping[category] || category;
+  return path.join(getDataPath(targetDir), filename);
 }
 
 module.exports = {

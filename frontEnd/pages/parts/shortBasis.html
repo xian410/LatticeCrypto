@@ -97,56 +97,106 @@
                 </div>
                 <el-form :model="generationParams" label-width="120px">
                   <el-row :gutter="15">
-                    <el-col :xs="24" :sm="8">
-                      <el-form-item label="向量维度 (n)">
+                    <el-col :xs="24" :sm="12">
+                      <el-form-item label="算法类型">
+                        <el-select
+                          v-model="generationParams.algorithm"
+                          placeholder="请选择算法"
+                        >
+                          <el-option label="LLL算法" value="lll"></el-option>
+                          <el-option label="BKZ算法" value="bkz"></el-option>
+                        </el-select>
+                      </el-form-item>
+                    </el-col>
+                    <el-col :xs="24" :sm="12">
+                      <el-form-item label="维度">
                         <el-input
                           v-model="generationParams.dimension"
-                          @input="updateVectorInputs"
+                          placeholder="格基矩阵维度"
                         ></el-input>
-                      </el-form-item>
-                    </el-col>
-                    <el-col :xs="24" :sm="8">
-                      <el-form-item label="向量个数 (r)">
-                        <el-input
-                          v-model="generationParams.vectorCount"
-                          @input="updateVectorInputs"
-                        ></el-input>
-                      </el-form-item>
-                    </el-col>
-                    <el-col :xs="24" :sm="8">
-                      <el-form-item label="模数 (q)">
-                        <el-input v-model="generationParams.modulus"></el-input>
                       </el-form-item>
                     </el-col>
                   </el-row>
 
-                  <!-- 向量输入区域 -->
-                  <div v-if="vectorInputs.length > 0" style="margin-top: 20px">
-                    <el-divider content-position="left"
-                      >向量输入 (u_0 到 u_(r-1))</el-divider
-                    >
-                    <div
-                      v-for="(vector, index) in vectorInputs"
-                      :key="index"
-                      class="vector-input-group"
-                    >
-                      <div class="vector-input-header">向量 u_{{index}}:</div>
-                      <el-row :gutter="10">
-                        <el-col
-                          :xs="6"
-                          :sm="4"
-                          :md="3"
-                          v-for="(value, dimIndex) in vector"
-                          :key="dimIndex"
-                        >
-                          <el-input
-                            v-model="vectorInputs[index][dimIndex]"
-                            :placeholder="`[${dimIndex}]`"
-                            size="small"
-                          ></el-input>
-                        </el-col>
-                      </el-row>
+                  <!-- 格基矩阵输入区域 -->
+                  <el-form-item label="格基矩阵">
+                    <div style="margin-bottom: 10px">
+                      <span style="color: #909399; font-size: 12px">
+                        请输入格基矩阵，格式: [[1,2,3],[4,5,6],[7,8,9]]
+                        (每行一个向量，用逗号分隔)
+                      </span>
                     </div>
+                    <el-input
+                      v-model="generationParams.latticeMatrix"
+                      type="textarea"
+                      :rows="8"
+                      placeholder="例如: [[1,2,3],[4,5,6],[7,8,9]]"
+                      style="font-family: monospace; font-size: 13px"
+                    ></el-input>
+                  </el-form-item>
+
+                  <!-- 算法参数 -->
+                  <el-row :gutter="15" v-if="generationParams.algorithm">
+                    <el-col
+                      :xs="24"
+                      :sm="8"
+                      v-if="generationParams.algorithm === 'lll'"
+                    >
+                      <el-form-item label="LLL参数 δ">
+                        <el-input
+                          v-model="generationParams.delta"
+                          placeholder="0.75"
+                        ></el-input>
+                      </el-form-item>
+                    </el-col>
+                    <el-col
+                      :xs="24"
+                      :sm="8"
+                      v-if="generationParams.algorithm === 'bkz'"
+                    >
+                      <el-form-item label="块大小">
+                        <el-input
+                          v-model="generationParams.blockSize"
+                          placeholder="20"
+                        ></el-input>
+                      </el-form-item>
+                    </el-col>
+                    <el-col :xs="24" :sm="8">
+                      <el-form-item label="精度">
+                        <el-input
+                          v-model="generationParams.precision"
+                          placeholder="1e-10"
+                        ></el-input>
+                      </el-form-item>
+                    </el-col>
+                  </el-row>
+
+                  <!-- 示例按钮 -->
+                  <div style="margin-bottom: 15px">
+                    <el-button
+                      size="small"
+                      @click="loadExample(3)"
+                      type="info"
+                      plain
+                    >
+                      加载3×3示例
+                    </el-button>
+                    <el-button
+                      size="small"
+                      @click="loadExample(4)"
+                      type="info"
+                      plain
+                    >
+                      加载4×4示例
+                    </el-button>
+                    <el-button
+                      size="small"
+                      @click="generateRandomMatrix"
+                      type="warning"
+                      plain
+                    >
+                      生成随机矩阵
+                    </el-button>
                   </div>
 
                   <div style="text-align: center; margin-top: 20px">
@@ -157,7 +207,21 @@
                       size="medium"
                     >
                       <i class="el-icon-cpu" style="margin-right: 6px"></i>
-                      开始生成短格基
+                      开始{{generationParams.algorithm === 'lll' ? 'LLL' :
+                      'BKZ'}}约化
+                    </el-button>
+                    <el-button
+                      type="primary"
+                      @click="evaluateQuality"
+                      :loading="isEvaluating"
+                      size="medium"
+                      style="margin-left: 10px"
+                    >
+                      <i
+                        class="el-icon-data-analysis"
+                        style="margin-right: 6px"
+                      ></i>
+                      质量评估
                     </el-button>
                   </div>
                 </el-form>
@@ -167,10 +231,10 @@
               <div v-if="generationResults">
                 <el-card shadow="hover" style="margin-bottom: 20px">
                   <div slot="header">
-                    <h5 style="margin: 0; color: #67c23a">短格基生成结果</h5>
+                    <h5 style="margin: 0; color: #67c23a">格基约化结果</h5>
                   </div>
                   <el-row :gutter="15">
-                    <el-col :xs="24" :sm="8">
+                    <el-col :xs="24" :sm="6">
                       <div
                         style="
                           text-align: center;
@@ -180,7 +244,7 @@
                         "
                       >
                         <div style="color: #67c23a; font-size: 13px">
-                          生成时间
+                          算法类型
                         </div>
                         <div
                           style="
@@ -189,11 +253,11 @@
                             margin-top: 5px;
                           "
                         >
-                          {{generationResults.generationTime}}
+                          {{generationResults.algorithm.toUpperCase()}}
                         </div>
                       </div>
                     </el-col>
-                    <el-col :xs="24" :sm="8">
+                    <el-col :xs="24" :sm="6">
                       <div
                         style="
                           text-align: center;
@@ -203,7 +267,7 @@
                         "
                       >
                         <div style="color: #67c23a; font-size: 13px">
-                          格基维度
+                          执行时间
                         </div>
                         <div
                           style="
@@ -212,11 +276,11 @@
                             margin-top: 5px;
                           "
                         >
-                          {{generationResults.basisDimension}}
+                          {{generationResults.executionTime}}
                         </div>
                       </div>
                     </el-col>
-                    <el-col :xs="24" :sm="8">
+                    <el-col :xs="24" :sm="6">
                       <div
                         style="
                           text-align: center;
@@ -235,7 +299,30 @@
                             margin-top: 5px;
                           "
                         >
-                          {{generationResults.matrixDimension}}
+                          {{generationResults.dimension}}
+                        </div>
+                      </div>
+                    </el-col>
+                    <el-col :xs="24" :sm="6">
+                      <div
+                        style="
+                          text-align: center;
+                          padding: 15px;
+                          background: #f0f9ff;
+                          border-radius: 8px;
+                        "
+                      >
+                        <div style="color: #67c23a; font-size: 13px">
+                          约化质量
+                        </div>
+                        <div
+                          style="
+                            font-size: 16px;
+                            font-weight: 600;
+                            margin-top: 5px;
+                          "
+                        >
+                          {{generationResults.qualityScore}}
                         </div>
                       </div>
                     </el-col>
@@ -245,43 +332,123 @@
 
               <!-- 输出结果 -->
               <div v-if="detailedResults">
-                <el-card shadow="hover">
+                <el-card shadow="hover" style="margin-bottom: 20px">
                   <div slot="header">
-                    <h5 style="margin: 0; color: #409eff">输出结果</h5>
+                    <h5 style="margin: 0; color: #409eff">约化结果</h5>
                   </div>
                   <el-row :gutter="20">
                     <el-col :xs="24" :sm="12">
                       <div style="margin-bottom: 20px">
                         <h6 style="color: #409eff; margin-bottom: 10px">
-                          垂直格上的短格基 A'
+                          原始格基矩阵
                         </h6>
                         <el-input
-                          v-model="detailedResults.shortBasis"
+                          v-model="detailedResults.originalBasis"
                           type="textarea"
                           :rows="8"
                           readonly
                           style="font-family: monospace; font-size: 11px"
-                          placeholder="短格基矩阵将在这里显示..."
+                          placeholder="原始格基矩阵将在这里显示..."
                         ></el-input>
                       </div>
                     </el-col>
                     <el-col :xs="24" :sm="12">
                       <div style="margin-bottom: 20px">
-                        <h6 style="color: #e6a23c; margin-bottom: 10px">
-                          扩展后的随机矩阵 Y
+                        <h6 style="color: #67c23a; margin-bottom: 10px">
+                          约化后的格基矩阵
                         </h6>
                         <el-input
-                          v-model="detailedResults.randomMatrix"
+                          v-model="detailedResults.reducedBasis"
                           type="textarea"
                           :rows="8"
                           readonly
                           style="font-family: monospace; font-size: 11px"
-                          placeholder="扩展随机矩阵将在这里显示..."
+                          placeholder="约化后的格基矩阵将在这里显示..."
                         ></el-input>
                       </div>
                     </el-col>
                   </el-row>
                 </el-card>
+
+                <!-- 质量评估结果 -->
+                <div v-if="qualityResults">
+                  <el-card shadow="hover">
+                    <div slot="header">
+                      <h5 style="margin: 0; color: #e6a23c">格基质量评估</h5>
+                    </div>
+                    <el-row :gutter="20">
+                      <el-col :xs="24" :sm="8">
+                        <div
+                          style="
+                            text-align: center;
+                            padding: 15px;
+                            background: #fff7e6;
+                            border-radius: 8px;
+                          "
+                        >
+                          <div style="color: #e6a23c; font-size: 13px">
+                            正交化缺陷
+                          </div>
+                          <div
+                            style="
+                              font-size: 16px;
+                              font-weight: 600;
+                              margin-top: 5px;
+                            "
+                          >
+                            {{qualityResults.orthogonalityDefect}}
+                          </div>
+                        </div>
+                      </el-col>
+                      <el-col :xs="24" :sm="8">
+                        <div
+                          style="
+                            text-align: center;
+                            padding: 15px;
+                            background: #fff7e6;
+                            border-radius: 8px;
+                          "
+                        >
+                          <div style="color: #e6a23c; font-size: 13px">
+                            最短向量长度
+                          </div>
+                          <div
+                            style="
+                              font-size: 16px;
+                              font-weight: 600;
+                              margin-top: 5px;
+                            "
+                          >
+                            {{qualityResults.shortestVectorLength}}
+                          </div>
+                        </div>
+                      </el-col>
+                      <el-col :xs="24" :sm="8">
+                        <div
+                          style="
+                            text-align: center;
+                            padding: 15px;
+                            background: #fff7e6;
+                            border-radius: 8px;
+                          "
+                        >
+                          <div style="color: #e6a23c; font-size: 13px">
+                            条件数
+                          </div>
+                          <div
+                            style="
+                              font-size: 16px;
+                              font-weight: 600;
+                              margin-top: 5px;
+                            "
+                          >
+                            {{qualityResults.conditionNumber}}
+                          </div>
+                        </div>
+                      </el-col>
+                    </el-row>
+                  </el-card>
+                </div>
               </div>
             </el-col>
           </el-row>
@@ -330,170 +497,221 @@
         data() {
           return {
             isGenerating: false,
+            isEvaluating: false,
             generationParams: {
+              algorithm: "lll",
               dimension: "",
-              vectorCount: "",
-              modulus: "",
+              latticeMatrix: "",
+              delta: "0.75",
+              blockSize: "20",
+              precision: "1e-10",
             },
             generationResults: null,
             detailedResults: null,
-            vectorInputs: [],
+            qualityResults: null,
           };
         },
 
         methods: {
-          updateVectorInputs() {
-            const dimension = parseInt(this.generationParams.dimension) || 0;
-            const vectorCount =
-              parseInt(this.generationParams.vectorCount) || 0;
+          // 加载示例矩阵
+          loadExample(size) {
+            this.generationParams.dimension = size.toString();
+            if (size === 3) {
+              this.generationParams.latticeMatrix = "[[1,2,3],[4,5,6],[7,8,9]]";
+            } else if (size === 4) {
+              this.generationParams.latticeMatrix =
+                "[[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]]";
+            }
+          },
 
-            if (
-              dimension > 0 &&
-              vectorCount > 0 &&
-              dimension <= 10 &&
-              vectorCount <= 5
-            ) {
-              this.vectorInputs = [];
-              for (let i = 0; i < vectorCount; i++) {
-                const vector = [];
-                for (let j = 0; j < dimension; j++) {
-                  vector.push("");
-                }
-                this.vectorInputs.push(vector);
+          // 生成随机矩阵
+          generateRandomMatrix() {
+            const dimension = parseInt(this.generationParams.dimension) || 3;
+            if (dimension < 2 || dimension > 10) {
+              this.$message.warning("维度应在 2-10 之间");
+              return;
+            }
+
+            let matrix = "[";
+            for (let i = 0; i < dimension; i++) {
+              let row = "[";
+              for (let j = 0; j < dimension; j++) {
+                const value = Math.floor(Math.random() * 20 - 10);
+                row += value;
+                if (j < dimension - 1) row += ",";
               }
-            } else {
-              this.vectorInputs = [];
+              row += "]";
+              matrix += row;
+              if (i < dimension - 1) matrix += ",";
+            }
+            matrix += "]";
+            this.generationParams.latticeMatrix = matrix;
+          },
+
+          // 验证矩阵格式
+          validateMatrix(matrixStr) {
+            try {
+              const matrix = JSON.parse(matrixStr);
+              if (!Array.isArray(matrix)) {
+                throw new Error("不是有效的数组格式");
+              }
+
+              for (let i = 0; i < matrix.length; i++) {
+                if (!Array.isArray(matrix[i])) {
+                  throw new Error(`第${i + 1}行不是数组`);
+                }
+                if (matrix[i].length !== matrix[0].length) {
+                  throw new Error("矩阵不是方阵");
+                }
+                for (let j = 0; j < matrix[i].length; j++) {
+                  if (!Number.isInteger(matrix[i][j])) {
+                    throw new Error(`第${i + 1}行第${j + 1}列不是整数`);
+                  }
+                }
+              }
+
+              return { valid: true, matrix };
+            } catch (error) {
+              return { valid: false, error: error.message };
             }
           },
           async generateShortBasis() {
+            // 参数验证
             if (
+              !this.generationParams.algorithm ||
               !this.generationParams.dimension ||
-              !this.generationParams.vectorCount ||
-              !this.generationParams.modulus
+              !this.generationParams.latticeMatrix
             ) {
               this.$message.warning("请填写所有必要参数");
               return;
             }
 
-            if (this.vectorInputs.length === 0) {
-              this.$message.warning("请输入向量数据");
+            // 验证矩阵格式
+            const validation = this.validateMatrix(
+              this.generationParams.latticeMatrix
+            );
+            if (!validation.valid) {
+              this.$message.error("格基矩阵格式错误: " + validation.error);
               return;
             }
 
-            for (let i = 0; i < this.vectorInputs.length; i++) {
-              for (let j = 0; j < this.vectorInputs[i].length; j++) {
-                if (!this.vectorInputs[i][j]) {
-                  this.$message.warning(`请完整填写向量 u_${i} 的所有分量`);
-                  return;
-                }
-              }
+            const dimension = parseInt(this.generationParams.dimension);
+            if (validation.matrix.length !== dimension) {
+              this.$message.error(
+                `矩阵维度不匹配：应为${dimension}x${dimension}`
+              );
+              return;
             }
 
             this.isGenerating = true;
 
             try {
               const params = {
-                dimension: parseInt(this.generationParams.dimension),
-                vectorCount: parseInt(this.generationParams.vectorCount),
-                modulus: this.generationParams.modulus,
-                vectors: this.vectorInputs,
-                timestamp: new Date().toISOString(),
+                algorithm: this.generationParams.algorithm,
+                dimension: dimension,
+                latticeMatrix: this.generationParams.latticeMatrix,
+                delta: parseFloat(this.generationParams.delta) || 0.75,
+                blockSize: parseInt(this.generationParams.blockSize) || 20,
+                precision: parseFloat(this.generationParams.precision) || 1e-10,
               };
 
-              // 写入参数到文件
-              if (typeof writeParamsToFile !== "undefined") {
-                await writeParamsToFile(
-                  "./data/shortbasis_params.json",
-                  params
+              let response;
+              if (params.algorithm === "lll") {
+                response = await fetch(
+                  "http://localhost:3001/api/quantum/shortbasis/lll/reduce",
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(params),
+                  }
                 );
-                console.log("参数已写入文件");
+              } else {
+                response = await fetch(
+                  "http://localhost:3001/api/quantum/shortbasis/bkz/reduce",
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(params),
+                  }
+                );
               }
 
-              // 模拟调用可执行文件
-              await this.simulateExecutableCall();
+              const result = await response.json();
 
-              // 从文件读取结果
-              await this.readResultsFromFile();
+              if (result.success) {
+                this.generationResults = {
+                  algorithm: params.algorithm,
+                  executionTime: result.data.executionTime,
+                  dimension: `${dimension}x${dimension}`,
+                  qualityScore: result.data.qualityScore || "待评估",
+                };
 
-              this.$message.success("短格基生成完成");
+                this.detailedResults = {
+                  originalBasis: this.formatMatrix(validation.matrix),
+                  reducedBasis:
+                    result.data.reducedBasis || "约化结果将在这里显示",
+                };
+
+                this.$message.success("格基约化完成");
+              } else {
+                throw new Error(result.error || "服务器错误");
+              }
             } catch (error) {
-              console.error("生成短格基时发生错误:", error);
-              this.$message.error("生成短格基失败: " + error.message);
+              console.error("格基约化失败:", error);
+              this.$message.error("格基约化失败: " + error.message);
             }
 
             this.isGenerating = false;
           },
-          async simulateExecutableCall() {
-            console.log("模拟调用短格基生成可执行文件...");
-
-            if (typeof executeFile !== "undefined") {
-              try {
-                // 这里应该调用实际的可执行文件
-                // const result = await executeFile('./bin/shortbasis', ['--config', './data/shortbasis_params.json']);
-                await this.simulateDelay(3000);
-              } catch (error) {
-                console.log("使用模拟执行:", error.message);
-                await this.simulateDelay(3000);
-              }
-            } else {
-              await this.simulateDelay(3000);
+          // 格基质量评估
+          async evaluateQuality() {
+            if (!this.detailedResults || !this.detailedResults.reducedBasis) {
+              this.$message.warning("请先执行格基约化");
+              return;
             }
-          },
-          async readResultsFromFile() {
-            console.log("模拟从文件读取结果...");
 
-            const generationTime = (2.5 + Math.random() * 2).toFixed(2) + "s";
-            const dimension = parseInt(this.generationParams.dimension);
-            const vectorCount = parseInt(this.generationParams.vectorCount);
+            this.isEvaluating = true;
 
-            this.generationResults = {
-              generationTime: generationTime,
-              basisDimension: `${dimension - vectorCount} × ${dimension}`,
-              matrixDimension: `${vectorCount} × ${dimension}`,
-            };
+            try {
+              const params = {
+                dimension: parseInt(this.generationParams.dimension),
+                latticeMatrix: this.generationParams.latticeMatrix,
+              };
 
-            const shortBasisMatrix = this.generateMatrixString(
-              dimension - vectorCount,
-              dimension
-            );
-            const randomMatrix = this.generateMatrixString(
-              vectorCount,
-              dimension
-            );
+              const response = await fetch(
+                "http://localhost:3001/api/quantum/shortbasis/evaluate",
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify(params),
+                }
+              );
 
-            this.detailedResults = {
-              shortBasis: shortBasisMatrix,
-              randomMatrix: randomMatrix,
-            };
+              const result = await response.json();
 
-            if (typeof readParamsFromFile !== "undefined") {
-              try {
-                const results = await readParamsFromFile(
-                  "./data/shortbasis_results.json",
-                  {
-                    defaultValue: this.detailedResults,
-                  }
-                );
-                this.detailedResults = { ...this.detailedResults, ...results };
-              } catch (error) {
-                console.log("使用模拟结果:", error.message);
+              if (result.success) {
+                this.qualityResults = result.data.qualityMetrics;
+                this.$message.success("质量评估完成");
+              } else {
+                throw new Error(result.error || "服务器错误");
               }
+            } catch (error) {
+              console.error("质量评估失败:", error);
+              this.$message.error("质量评估失败: " + error.message);
             }
+
+            this.isEvaluating = false;
           },
-          generateMatrixString(rows, cols) {
-            let matrix = "";
-            for (let i = 0; i < rows; i++) {
-              const row = [];
-              for (let j = 0; j < cols; j++) {
-                row.push(Math.floor(Math.random() * 100 - 50));
-              }
-              matrix += `[${row.join(", ")}]`;
-              if (i < rows - 1) matrix += "\n";
-            }
-            return matrix;
-          },
-          simulateDelay(ms) {
-            return new Promise((resolve) => setTimeout(resolve, ms));
+
+          // 格式化矩阵显示
+          formatMatrix(matrix) {
+            return matrix.map((row) => `[${row.join(", ")}]`).join("\n");
           },
           backToMenu() {
             window.location.href = "../menu.html";

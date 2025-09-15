@@ -1,0 +1,8 @@
+execution_time=3.15s
+success_rate=88.5%
+solution_type=generated
+variable_count=1
+equation_count=1
+error_rate=1
+solution_data=求解结果：\nx1 = 847543976289974059352198217110193148
+timestamp=1757922390783

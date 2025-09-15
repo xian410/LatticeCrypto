@@ -7,14 +7,14 @@ class QuantumValidators {
   static validateLPNParams(params) {
     const { paramCount, equationCount, errorRate, initialParams } = params;
     if (!paramCount || !equationCount || !errorRate || !initialParams) {
-      return { valid: false, message: '请填写完整的LPN参数' };
+      return { valid: false, message: "请填写完整的LPN参数" };
     }
     return { valid: true };
   }
 
   static validateBitString(str, expectedLength = null) {
     if (!/^[01]+$/.test(str)) {
-      return { valid: false, message: '必须为01比特串' };
+      return { valid: false, message: "必须为01比特串" };
     }
     if (expectedLength && str.length !== expectedLength) {
       return { valid: false, message: `长度必须为${expectedLength}位` };
@@ -27,51 +27,56 @@ class QuantumValidators {
       des_onetime: () => {
         const { plaintext1, plaintext2, key } = params;
         if (!plaintext1 || !plaintext2 || !key) {
-          return { valid: false, message: '请输入明文和密钥' };
+          return { valid: false, message: "请输入明文和密钥" };
         }
         return { valid: true };
       },
       sm4_onetime: () => {
         const { plaintext, key, blockSize } = params;
         if (!plaintext || !key) {
-          return { valid: false, message: '请输入明文和密钥' };
+          return { valid: false, message: "请输入明文和密钥" };
         }
         if (plaintext.length !== blockSize || key.length !== blockSize) {
-          return { valid: false, message: `明文和密钥长度必须都为${blockSize}位` };
+          return {
+            valid: false,
+            message: `明文和密钥长度必须都为${blockSize}位`,
+          };
         }
         const plaintextCheck = this.validateBitString(plaintext);
         const keyCheck = this.validateBitString(key);
         if (!plaintextCheck.valid || !keyCheck.valid) {
-          return { valid: false, message: '明文和密钥必须为01比特串' };
+          return { valid: false, message: "明文和密钥必须为01比特串" };
         }
         return { valid: true };
-      }
+      },
     };
-    
+
     const validator = validators[activeSubFunction];
     return validator ? validator() : { valid: true };
   }
 
   static validateSDESParams(params) {
     const { plaintext1, plaintext2, key } = params;
-    
+
     if (!plaintext1 || !plaintext2 || !key) {
-      return { valid: false, message: '请输入完整的明文和密钥' };
+      return { valid: false, message: "请输入完整的明文和密钥" };
     }
-    
+
     if (plaintext1.length !== 8 || plaintext2.length !== 8) {
-      return { valid: false, message: '明文长度必须为8位' };
+      return { valid: false, message: "明文长度必须为8位" };
     }
-    
+
     if (key.length !== 10) {
-      return { valid: false, message: '密钥长度必须为10位' };
+      return { valid: false, message: "密钥长度必须为10位" };
     }
-    
-    const checkBits = [plaintext1, plaintext2, key].every(str => /^[01]+$/.test(str));
+
+    const checkBits = [plaintext1, plaintext2, key].every((str) =>
+      /^[01]+$/.test(str)
+    );
     if (!checkBits) {
-      return { valid: false, message: '明文和密钥必须为01比特串' };
+      return { valid: false, message: "明文和密钥必须为01比特串" };
     }
-    
+
     return { valid: true };
   }
 }
@@ -83,13 +88,13 @@ class QuantumAPIHelper {
   static async makeRequest(method, endpoint, data = null) {
     const config = {
       method,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { "Content-Type": "application/json" },
     };
-    
-    if (data && method !== 'GET') {
+
+    if (data && method !== "GET") {
       config.body = JSON.stringify(data);
     }
-    
+
     const response = await fetch(window.API_CONFIG.BASE_URL + endpoint, config);
     return await response.json();
   }
@@ -115,27 +120,27 @@ class QuantumAPIHelper {
   }
 
   static async attackSM4(params) {
-    return this.makeRequest('POST', '/api/quantum/sm4/attack', params);
+    return this.makeRequest("POST", "/api/quantum/sm4/attack", params);
   }
 
   static async encryptSDES(params) {
-    return this.makeRequest('POST', '/api/quantum/sdes/encrypt', params);
+    return this.makeRequest("POST", "/api/quantum/sdes/encrypt", params);
   }
 
   static async attackSDES() {
-    return this.makeRequest('POST', '/api/quantum/sdes/attack');
+    return this.makeRequest("POST", "/api/quantum/sdes/attack");
   }
 
   static async compareSDES(params) {
-    return this.makeRequest('POST', '/api/quantum/sdes/comparison', params);
+    return this.makeRequest("POST", "/api/quantum/sdes/comparison", params);
   }
 
   static async generateRandom(type, params) {
     const endpoints = {
-      sdes: '/api/quantum/sdes/generate',
-      sm4: '/api/quantum/sm4/generate'
+      sdes: "/api/quantum/sdes/generate",
+      sm4: "/api/quantum/sm4/generate",
     };
-    return this.makeRequest('POST', endpoints[type], params);
+    return this.makeRequest("POST", endpoints[type], params);
   }
 }
 
@@ -146,32 +151,36 @@ class QuantumDataProcessor {
   static parseOutputParams(outputContent) {
     const params = {};
     if (!outputContent) return params;
-    
-    outputContent.split('\n').forEach(line => {
+
+    outputContent.split("\n").forEach((line) => {
       const trimmed = line.trim();
-      if (trimmed.includes('=')) {
-        const [key, value] = trimmed.split('=', 2);
+      if (trimmed.includes("=")) {
+        const [key, value] = trimmed.split("=", 2);
         params[key.trim()] = value.trim();
       }
     });
-    
+
     return params;
   }
 
   static generateLocalRandomBits(length) {
-    return Array.from({length}, () => Math.random() < 0.5 ? '0' : '1').join('');
+    return Array.from({ length }, () => (Math.random() < 0.5 ? "0" : "1")).join(
+      ""
+    );
   }
 
   static formatResult(response, defaultValues = {}) {
     if (!response || !response.success) return null;
-    
+
     return {
-      time: response.data.executionTime || defaultValues.time || '0.00s',
-      rate: response.data.successRate || defaultValues.rate || '0%',
-      solve: response.data.solutionPreview || defaultValues.solve || '完成',
-      secretKey: response.data.secretKey || defaultValues.secretKey || '',
-      plaintext: response.data.recoveredPlaintext || defaultValues.plaintext || '',
-      averageCalls: response.data.averageCalls || defaultValues.averageCalls || ''
+      time: response.data.executionTime || defaultValues.time || "0.00s",
+      rate: response.data.successRate || defaultValues.rate || "0%",
+      solve: response.data.solutionPreview || defaultValues.solve || "完成",
+      secretKey: response.data.secretKey || defaultValues.secretKey || "",
+      plaintext:
+        response.data.recoveredPlaintext || defaultValues.plaintext || "",
+      averageCalls:
+        response.data.averageCalls || defaultValues.averageCalls || "",
     };
   }
 }
@@ -182,7 +191,7 @@ class QuantumDataProcessor {
 const QuantumMixin = {
   methods: {
     // 通用请求处理方法
-    async handleRequest(requestFn, loadingKey, successMsg, errorPrefix = '') {
+    async handleRequest(requestFn, loadingKey, successMsg, errorPrefix = "") {
       this.loadingStates[loadingKey] = true;
       try {
         const result = await requestFn();
@@ -190,7 +199,7 @@ const QuantumMixin = {
           this.$message.success(successMsg);
           return result;
         } else {
-          throw new Error(result.error || result.message || '请求失败');
+          throw new Error(result.error || result.message || "请求失败");
         }
       } catch (error) {
         this.$message.error(`${errorPrefix}${error.message}`);
@@ -211,7 +220,8 @@ const QuantumMixin = {
         }
       } catch (error) {
         // 回退到本地生成
-        const randomBits = QuantumDataProcessor.generateLocalRandomBits(fallbackLength);
+        const randomBits =
+          QuantumDataProcessor.generateLocalRandomBits(fallbackLength);
         this.$message.success(`本地随机生成${fallbackLength}位数据成功`);
         return randomBits;
       }
@@ -220,17 +230,21 @@ const QuantumMixin = {
     // 参数重置方法
     resetParams(type) {
       if (this.params[type]) {
-        Object.keys(this.params[type]).forEach(key => {
-          this.params[type][key] = typeof this.params[type][key] === 'number' ? 
-            (key === 'blockSize' ? 8 : 0) : '';
+        Object.keys(this.params[type]).forEach((key) => {
+          this.params[type][key] =
+            typeof this.params[type][key] === "number"
+              ? key === "blockSize"
+                ? 8
+                : 0
+              : "";
         });
       }
-    }
-  }
+    },
+  },
 };
 
 // 导出工具类和混入对象
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   window.QuantumValidators = QuantumValidators;
   window.QuantumAPIHelper = QuantumAPIHelper;
   window.QuantumDataProcessor = QuantumDataProcessor;

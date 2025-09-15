@@ -1,4 +1,4 @@
-// 业务逻辑处理模块
+// quantum.js - 量子算法页面相关业务逻辑
 const { config, getFilePath } = require("../config");
 const {
   generateRandomBits,

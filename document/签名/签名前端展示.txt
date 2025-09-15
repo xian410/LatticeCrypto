@@ -1,0 +1,18 @@
+签名算法：
+界面中传入文件的绝对路径，传入后程序自动生成公私钥对，并对文件内容进行签名与签名验证
+
+程序执行完毕会生成一个日志文件，其中包含程序执行的各种结果，结构如下：
+=== Squirrels Benchmark Log ===
+Kengen_time:密钥生成时间
+Seed：随机种子
+Privatekey：私钥
+PublicKey：公钥
+PlaintextLength：明文长度（单位字节）
+Plaintext：明文内容
+Signature_time:签名时间
+SignatureLength：签名长度（单位字节）
+Signature：签名
+Verify_time:验证时间
+VerifyResult：验证结果
+VerificationMessageMatch：与明文是否匹配
+=== End of Log ===

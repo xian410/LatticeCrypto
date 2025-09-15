@@ -1,10 +1,27 @@
 // 路由模块
 const express = require("express");
+const { LPNService, SDESService, SM4Service } = require("../services/quantum");
 const {
-  LPNService,
-  SDESService,
-  SM4Service,
-} = require("../services/algorithms");
+  PBLPKEAnalysisService,
+  PBLSignAnalysisService,
+  AnalysisUtilsService,
+} = require("../services/analysis");
+const {
+  LWEKeyGenService,
+  KeyValidationService,
+} = require("../services/keyGen");
+const {
+  LLLAlgorithmService,
+  BKZAlgorithmService,
+  LatticeQualityService,
+  MatrixGeneratorService,
+} = require("../services/shortBasis");
+const {
+  LatticeSignatureService,
+  MessageSigningService,
+  SignatureVerificationService,
+  BatchSigningService,
+} = require("../services/signature");
 const { config, getFilePath } = require("../config");
 const { readFile } = require("../utils/common");
 const fs = require("fs-extra");
@@ -242,6 +259,227 @@ router.get("/files/:category/:filename", async (req, res) => {
     handleError(res, error, "文件读取");
   }
 });
+
+// ===== 密码分析页面路由 =====
+// PBLPKE算法安全性评估
+router.post(
+  "/analysis/pblpke/evaluate",
+  validateParams(["n", "q", "norm"]),
+  async (req, res) => {
+    try {
+      const data = await PBLPKEAnalysisService.evaluate(req.body);
+      handleResponse(res, "PBLPKE安全性评估", data, "PBLPKE安全性评估完成");
+    } catch (error) {
+      handleError(res, error, "PBLPKE安全性评估");
+    }
+  }
+);
+
+// PBLSign算法安全性评估
+router.post(
+  "/analysis/pblsign/evaluate",
+  validateParams(["n", "q", "norm"]),
+  async (req, res) => {
+    try {
+      const data = await PBLSignAnalysisService.evaluate(req.body);
+      handleResponse(res, "PBLSign安全性评估", data, "PBLSign安全性评估完成");
+    } catch (error) {
+      handleError(res, error, "PBLSign安全性评估");
+    }
+  }
+);
+
+// 生成分析报告
+router.post(
+  "/analysis/report",
+  validateParams(["algorithm", "results"]),
+  async (req, res) => {
+    try {
+      const data = await AnalysisUtilsService.generateReport(
+        req.body.algorithm,
+        req.body.results
+      );
+      handleResponse(res, "生成分析报告", data, "分析报告生成完成");
+    } catch (error) {
+      handleError(res, error, "生成分析报告");
+    }
+  }
+);
+
+// ===== 密钥生成页面路由 =====
+// LWE密钥生成
+router.post(
+  "/keygen/lwe/generate",
+  validateParams(["dimension", "modulus", "errorDistribution", "keyLength"]),
+  async (req, res) => {
+    try {
+      const data = await LWEKeyGenService.generateKeys(req.body);
+      handleResponse(res, "LWE密钥生成", data, "LWE密钥对生成完成");
+    } catch (error) {
+      handleError(res, error, "LWE密钥生成");
+    }
+  }
+);
+
+// 密钥验证
+router.post(
+  "/keygen/validate",
+  validateParams(["publicKeyFile", "privateKeyFile"]),
+  async (req, res) => {
+    try {
+      const data = await KeyValidationService.validateKeyPair(
+        req.body.publicKeyFile,
+        req.body.privateKeyFile
+      );
+      handleResponse(res, "密钥验证", data, "密钥验证完成");
+    } catch (error) {
+      handleError(res, error, "密钥验证");
+    }
+  }
+);
+
+// ===== 短基算法页面路由 =====
+// LLL算法约化
+router.post(
+  "/shortbasis/lll/reduce",
+  validateParams(["dimension", "latticeMatrix"]),
+  async (req, res) => {
+    try {
+      const data = await LLLAlgorithmService.reduceBasis(req.body);
+      handleResponse(res, "LLL约化", data, "LLL格基约化完成");
+    } catch (error) {
+      handleError(res, error, "LLL约化");
+    }
+  }
+);
+
+// BKZ算法约化
+router.post(
+  "/shortbasis/bkz/reduce",
+  validateParams(["dimension", "latticeMatrix"]),
+  async (req, res) => {
+    try {
+      const data = await BKZAlgorithmService.reduceBasis(req.body);
+      handleResponse(res, "BKZ约化", data, "BKZ格基约化完成");
+    } catch (error) {
+      handleError(res, error, "BKZ约化");
+    }
+  }
+);
+
+// 格基质量评估
+router.post(
+  "/shortbasis/evaluate",
+  validateParams(["dimension", "latticeMatrix"]),
+  async (req, res) => {
+    try {
+      const data = await LatticeQualityService.evaluateBasis(req.body);
+      handleResponse(res, "格基质量评估", data, "格基质量评估完成");
+    } catch (error) {
+      handleError(res, error, "格基质量评估");
+    }
+  }
+);
+
+// 随机格矩阵生成
+router.post(
+  "/shortbasis/generate",
+  validateParams(["dimension"]),
+  async (req, res) => {
+    try {
+      const data = await MatrixGeneratorService.generateRandomLattice(req.body);
+      handleResponse(res, "随机格生成", data, "随机格矩阵生成完成");
+    } catch (error) {
+      handleError(res, error, "随机格生成");
+    }
+  }
+);
+
+// ===== 数字签名页面路由 =====
+// 生成签名密钥对
+router.post(
+  "/signature/keygen",
+  validateParams(["dimension", "modulus", "gaussianParameter"]),
+  async (req, res) => {
+    try {
+      const data = await LatticeSignatureService.generateSigningKeys(req.body);
+      handleResponse(res, "签名密钥生成", data, "签名密钥对生成完成");
+    } catch (error) {
+      handleError(res, error, "签名密钥生成");
+    }
+  }
+);
+
+// 消息签名
+router.post(
+  "/signature/sign",
+  validateParams(["message", "privateKeyFile"]),
+  async (req, res) => {
+    try {
+      const data = await MessageSigningService.signMessage(req.body);
+      handleResponse(res, "消息签名", data, "消息签名完成");
+    } catch (error) {
+      handleError(res, error, "消息签名");
+    }
+  }
+);
+
+// 签名验证
+router.post(
+  "/signature/verify",
+  validateParams(["signatureFile", "publicKeyFile"]),
+  async (req, res) => {
+    try {
+      const data = await SignatureVerificationService.verifySignature(req.body);
+      handleResponse(
+        res,
+        "签名验证",
+        data,
+        data.results.isValid ? "签名验证通过" : "签名验证失败"
+      );
+    } catch (error) {
+      handleError(res, error, "签名验证");
+    }
+  }
+);
+
+// 批量签名
+router.post(
+  "/signature/batch/sign",
+  validateParams(["messages", "privateKeyFile"]),
+  async (req, res) => {
+    try {
+      const data = await BatchSigningService.signMultipleMessages(req.body);
+      handleResponse(
+        res,
+        "批量签名",
+        data,
+        `批量签名完成，共处理${data.results.totalMessages}条消息`
+      );
+    } catch (error) {
+      handleError(res, error, "批量签名");
+    }
+  }
+);
+
+// 批量验证
+router.post(
+  "/signature/batch/verify",
+  validateParams(["batchFile", "publicKeyFile"]),
+  async (req, res) => {
+    try {
+      const data = await BatchSigningService.verifyBatchSignatures(req.body);
+      handleResponse(
+        res,
+        "批量验证",
+        data,
+        `批量验证完成，成功率: ${data.results.successRate}`
+      );
+    } catch (error) {
+      handleError(res, error, "批量验证");
+    }
+  }
+);
 
 // 健康检查
 router.get("/health", (req, res) => {

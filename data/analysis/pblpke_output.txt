@@ -1,0 +1,13 @@
+rop=0000
+red=303
+svP=1295
+mem=38
+beta=87
+d=316
+eta=263
+delta=1.027423
+zeta=32
+S=1648
+prob=0.7311
+U=59
+timestamp=1757921881558
