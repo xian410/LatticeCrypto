@@ -1,8 +1,8 @@
-execution_time=3.15s
-success_rate=88.5%
+execution_time=3.02s
+success_rate=84.9%
 solution_type=generated
-variable_count=1
-equation_count=1
-error_rate=1
-solution_data=求解结果：\nx1 = 847543976289974059352198217110193148
-timestamp=1757922390783
+variable_count=2
+equation_count=2
+error_rate=2
+solution_data=求解结果：\nx1 = 496333637877562959556726\nx2 = 44586830961718607108390117137
+timestamp=1757935901522

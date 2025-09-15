@@ -1,0 +1,16 @@
+运行LWE.py：
+
+格式： sage inject_run.sage LWE.py n q m std mean std mean
+例：   sage inject_run.sage LWE.py 640 16384 640 1 0 1 0
+要求：   n=m
+        q=数字形式，不能是指数
+        std:标准差 
+        mean:均值
+
+
+
+
+运行sis.py：
+
+格式： sage inject_run.sage sis.py n m q length_bound
+例：   sage inject_run.sage sis.py 640 640 16384 2
