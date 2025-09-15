@@ -1,0 +1,8 @@
+execution_time=2.90s
+success_rate=97.4%
+solution_type=generated
+variable_count=2
+equation_count=2
+error_rate=2
+solution_data=求解结果：\nx1 = 332031017982728328892\nx2 = 48364139550163346921613982594
+timestamp=1757835636892

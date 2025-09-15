@@ -2,7 +2,7 @@
   "name": "main-web",
   "version": "1.0.0",
   "description": "",
-  "main": "./src/js/main.js",
+  "main": "./frontEnd/js/main.js",
   "scripts": {
     "start": "electron ."
   },

@@ -288,57 +288,92 @@
                                 <h5 style="margin: 0; color: #409eff; font-size: 14px;">{{currentAlgorithmConfig.label.split('的')[0]}}评估模块</h5>
                             </div>
                             <el-form :model="evaluationParams" label-width="120px" style="padding: 8px; max-width: 100%; overflow-x: hidden;">
-                                <el-row :gutter="15">
-                                    <el-col :xs="24" :sm="12" :md="12" :lg="8">
-                                        <el-form-item label="n">
-                                            <el-input v-model="evaluationParams.n" placeholder="请输入n值" style="border-radius: 6px;"></el-input>
-                                        </el-form-item>
-                                    </el-col>
-                                    <el-col :xs="24" :sm="12" :md="12" :lg="8">
-                                        <el-form-item label="q">
-                                            <el-input v-model="evaluationParams.q" placeholder="请输入q值" style="border-radius: 6px;"></el-input>
-                                        </el-form-item>
-                                    </el-col>
-                                    <el-col :xs="24" :sm="12" :md="12" :lg="8">
-                                        <el-form-item label="m">
-                                            <el-input v-model="evaluationParams.m" placeholder="请输入m值" style="border-radius: 6px;"></el-input>
-                                        </el-form-item>
-                                    </el-col>
-                                </el-row>
-                                <el-row :gutter="15">
-                                    <el-col :xs="24" :sm="12" :md="12" :lg="8">
-                                        <el-form-item label="秘密向量s的σ">
-                                            <el-input v-model="evaluationParams.s_sigma" placeholder="标准差" style="border-radius: 6px;"></el-input>
-                                        </el-form-item>
-                                    </el-col>
-                                    <el-col :xs="24" :sm="12" :md="12" :lg="8">
-                                        <el-form-item label="秘密向量s的c">
-                                            <el-input v-model="evaluationParams.s_c" placeholder="均值" style="border-radius: 6px;"></el-input>
-                                        </el-form-item>
-                                    </el-col>
-                                    <el-col :xs="24" :sm="12" :md="12" :lg="8">
-                                        <el-form-item label="秘密向量e的σ">
-                                            <el-input v-model="evaluationParams.e_sigma" placeholder="标准差" style="border-radius: 6px;"></el-input>
-                                        </el-form-item>
-                                    </el-col>
-                                </el-row>
-                                <el-row :gutter="15">
-                                    <el-col :xs="24" :sm="12" :md="12" :lg="8">
-                                        <el-form-item label="秘密向量e的c">
-                                            <el-input v-model="evaluationParams.e_c" placeholder="均值" style="border-radius: 6px;"></el-input>
-                                        </el-form-item>
-                                    </el-col>
-                                    <el-col :xs="24" :sm="12" :md="12" :lg="8">
-                                        <el-form-item label="安全强度级别">
-                                            <el-select v-model="evaluationParams.securityLevel" placeholder="请选择安全强度" style="width: 100%; border-radius: 6px;">
-                                                <el-option label="128bit" value="128"></el-option>
-                                                <el-option label="192bit" value="192"></el-option>
-                                                <el-option label="256bit" value="256"></el-option>
-                                                <el-option v-if="activeAlgorithm === 'pblpke' " label="384bit" value="384"></el-option>
-                                            </el-select>
-                                        </el-form-item>
-                                    </el-col>
-                                </el-row>
+                                <!-- PBLPKE参数 -->
+                                <div v-if="activeAlgorithm === 'pblpke'">
+                                    <el-row :gutter="15">
+                                        <el-col :xs="24" :sm="12" :md="12" :lg="8">
+                                            <el-form-item label="n">
+                                                <el-input v-model="evaluationParams.n" placeholder="请输入n值" style="border-radius: 6px;"></el-input>
+                                            </el-form-item>
+                                        </el-col>
+                                        <el-col :xs="24" :sm="12" :md="12" :lg="8">
+                                            <el-form-item label="q">
+                                                <el-input v-model="evaluationParams.q" placeholder="请输入q值" style="border-radius: 6px;"></el-input>
+                                            </el-form-item>
+                                        </el-col>
+                                        <el-col :xs="24" :sm="12" :md="12" :lg="8">
+                                            <el-form-item label="m">
+                                                <el-input v-model="evaluationParams.m" placeholder="请输入m值" style="border-radius: 6px;"></el-input>
+                                            </el-form-item>
+                                        </el-col>
+                                    </el-row>
+                                    <el-row :gutter="15">
+                                        <el-col :xs="24" :sm="12" :md="12" :lg="8">
+                                            <el-form-item label="秘密向量s的σ">
+                                                <el-input v-model="evaluationParams.s_sigma" placeholder="标准差" style="border-radius: 6px;"></el-input>
+                                            </el-form-item>
+                                        </el-col>
+                                        <el-col :xs="24" :sm="12" :md="12" :lg="8">
+                                            <el-form-item label="秘密向量s的c">
+                                                <el-input v-model="evaluationParams.s_c" placeholder="均值" style="border-radius: 6px;"></el-input>
+                                            </el-form-item>
+                                        </el-col>
+                                        <el-col :xs="24" :sm="12" :md="12" :lg="8">
+                                            <el-form-item label="秘密向量e的σ">
+                                                <el-input v-model="evaluationParams.e_sigma" placeholder="标准差" style="border-radius: 6px;"></el-input>
+                                            </el-form-item>
+                                        </el-col>
+                                    </el-row>
+                                    <el-row :gutter="15">
+                                        <el-col :xs="24" :sm="12" :md="12" :lg="8">
+                                            <el-form-item label="秘密向量e的c">
+                                                <el-input v-model="evaluationParams.e_c" placeholder="均值" style="border-radius: 6px;"></el-input>
+                                            </el-form-item>
+                                        </el-col>
+                                        <el-col :xs="24" :sm="12" :md="12" :lg="8">
+                                            <el-form-item label="安全强度级别">
+                                                <el-select v-model="evaluationParams.securityLevel" placeholder="请选择安全强度" style="width: 100%; border-radius: 6px;">
+                                                    <el-option label="128bit" value="128"></el-option>
+                                                    <el-option label="192bit" value="192"></el-option>
+                                                    <el-option label="256bit" value="256"></el-option>
+                                                    <el-option label="384bit" value="384"></el-option>
+                                                </el-select>
+                                            </el-form-item>
+                                        </el-col>
+                                    </el-row>
+                                </div>
+                                
+                                <!-- PBLSign参数 -->
+                                <div v-if="activeAlgorithm === 'pblsign'">
+                                    <el-row :gutter="15">
+                                        <el-col :xs="24" :sm="12" :md="8">
+                                            <el-form-item label="n">
+                                                <el-input v-model="evaluationParams.n" placeholder="请输入n值" style="border-radius: 6px;"></el-input>
+                                            </el-form-item>
+                                        </el-col>
+                                        <el-col :xs="24" :sm="12" :md="8">
+                                            <el-form-item label="q">
+                                                <el-input v-model="evaluationParams.q" placeholder="请输入q值" style="border-radius: 6px;"></el-input>
+                                            </el-form-item>
+                                        </el-col>
+                                        <el-col :xs="24" :sm="12" :md="8">
+                                            <el-form-item label="Norm">
+                                                <el-input v-model="evaluationParams.norm" placeholder="请输入Norm值" style="border-radius: 6px;"></el-input>
+                                            </el-form-item>
+                                        </el-col>
+                                    </el-row>
+                                    <el-row :gutter="15">
+                                        <el-col :xs="24" :sm="12" :md="8">
+                                            <el-form-item label="安全强度级别">
+                                                <el-select v-model="evaluationParams.securityLevel" placeholder="请选择安全强度" style="width: 100%; border-radius: 6px;">
+                                                    <el-option label="128bit" value="128"></el-option>
+                                                    <el-option label="192bit" value="192"></el-option>
+                                                    <el-option label="256bit" value="256"></el-option>
+                                                </el-select>
+                                            </el-form-item>
+                                        </el-col>
+                                    </el-row>
+                                </div>
                                 
                                 <div style="text-align: center; margin-top: 15px;">
                                     <el-button
@@ -612,11 +647,7 @@
             pblsignParams: {
               n: "",
               q: "",
-              m: "",
-              s_sigma: "",
-              s_c: "",
-              e_sigma: "",
-              e_c: "",
+              norm: "",
               securityLevel: "128"
             },
             pblpkeResults: null,
@@ -647,20 +678,28 @@
           },
           evaluateAlgorithm() {
             const params = this.evaluationParams;
-            // 检查参数是否完整
-            if (!params.n || !params.q || !params.m || 
-                !params.s_sigma || !params.s_c || 
-                !params.e_sigma || !params.e_c || !params.securityLevel) {
-              this.$message.warning('请填写所有参数');
-              return;
+            // 根据算法类型检查参数是否完整
+            if (this.activeAlgorithm === 'pblpke') {
+              if (!params.n || !params.q || !params.m || 
+                  !params.s_sigma || !params.s_c || 
+                  !params.e_sigma || !params.e_c || !params.securityLevel) {
+                this.$message.warning('请填写所有PBLPKE参数');
+                return;
+              }
+            } else if (this.activeAlgorithm === 'pblsign') {
+              if (!params.n || !params.q || !params.norm || !params.securityLevel) {
+                this.$message.warning('请填写所有PBLSign参数');
+                return;
+              }
             }
 
             this.isEvaluating = true;
 
             // 模拟读取文件和评估过程
             setTimeout(() => {
-              // 根据安全强度生成不同的结果
+              // 直接使用用户选择的安全强度级别
               const securityLevel = params.securityLevel;
+              
               const results = {
                 overall: `${securityLevel} 安全级别`,
                 classical: `2^${securityLevel} 次操作`,

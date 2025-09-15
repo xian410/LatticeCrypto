@@ -1,0 +1,6 @@
+paramCount=2
+equationCount=2
+errorRate=2
+initialParams=2
+timestamp=1757835634889
+type=generate_lpn
