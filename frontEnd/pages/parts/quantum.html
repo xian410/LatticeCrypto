@@ -255,43 +255,73 @@
                                 <!-- SDES 攻击操作区域 -->
                                 <div v-if="activeSubFunction === 'sdes_attack'" style="padding: 20px; border-top: 1px solid #ebeef5; margin-top: 20px;">
                                     <el-divider content-position="left" style="margin-top: 0; font-weight: 600;">SDES攻击操作</el-divider>
-                                    <el-button
-                                        type="warning"
-                                        @click="loadSDESData"
-                                        :loading="isLoading"
-                                        icon="el-icon-download"
-                                        style="margin-bottom: 20px; border-radius: 6px; font-weight: 600;"
-                                    >读取加密数据</el-button>
-                                    
-                                    <!-- 显示读取的明密文对 -->
-                                    <div v-if="sdesAttackData.plaintext1" style="margin-bottom: 20px;">
-                                        <el-card shadow="hover" style="border-radius: 8px;">
-                                            <div slot="header">已加载的明密文对</div>
-                                            <el-row :gutter="20">
-                                                <el-col :xs="12" :sm="6">
-                                                    <div><strong>明文1:</strong> {{sdesAttackData.plaintext1}}</div>
-                                                </el-col>
-                                                <el-col :xs="12" :sm="6">
-                                                    <div><strong>明文2:</strong> {{sdesAttackData.plaintext2}}</div>
-                                                </el-col>
-                                                <el-col :xs="12" :sm="6">
-                                                    <div><strong>密文1:</strong> {{sdesAttackData.ciphertext1}}</div>
-                                                </el-col>
-                                                <el-col :xs="12" :sm="6">
-                                                    <div><strong>密文2:</strong> {{sdesAttackData.ciphertext2}}</div>
-                                                </el-col>
-                                            </el-row>
-                                        </el-card>
-                                    </div>
-                                    
-                                    <el-button
-                                        type="danger"
-                                        @click="attackSDES"
-                                        :loading="isAttacking"
-                                        :disabled="!sdesAttackData.plaintext1"
-                                        icon="el-icon-cpu"
-                                        style="border-radius: 6px; font-weight: 600; box-shadow: 0 2px 8px rgba(245, 108, 108, 0.3);"
-                                    >开始攻击</el-button>
+                                    <el-form :model="sdesAttackData" label-width="100px" style="margin-top: 20px;">
+                                        <el-row :gutter="20">
+                                            <el-col :xs="24" :sm="12">
+                                                <el-form-item label="明文1 (8位)">
+                                                    <el-input
+                                                        v-model="sdesAttackData.plaintext1"
+                                                        placeholder="输入8位01比特串"
+                                                        maxlength="8"
+                                                        style="border-radius: 6px;"
+                                                        readonly
+                                                    ></el-input>
+                                                </el-form-item>
+                                            </el-col>
+                                            <el-col :xs="24" :sm="12">
+                                                <el-form-item label="密文1">
+                                                    <el-input
+                                                        v-model="sdesAttackData.ciphertext1"
+                                                        placeholder="对应的密文1"
+                                                        maxlength="8"
+                                                        style="border-radius: 6px;"
+                                                        readonly
+                                                    ></el-input>
+                                                </el-form-item>
+                                            </el-col>
+                                        </el-row>
+                                        <el-row :gutter="20">
+                                            <el-col :xs="24" :sm="12">
+                                                <el-form-item label="明文2 (8位)">
+                                                    <el-input
+                                                        v-model="sdesAttackData.plaintext2"
+                                                        placeholder="输入8位01比特串"
+                                                        maxlength="8"
+                                                        style="border-radius: 6px;"
+                                                        readonly
+                                                    ></el-input>
+                                                </el-form-item>
+                                            </el-col>
+                                            <el-col :xs="24" :sm="12">
+                                                <el-form-item label="密文2">
+                                                    <el-input
+                                                        v-model="sdesAttackData.ciphertext2"
+                                                        placeholder="对应的密文2"
+                                                        maxlength="8"
+                                                        style="border-radius: 6px;"
+                                                        readonly
+                                                    ></el-input>
+                                                </el-form-item>
+                                            </el-col>
+                                        </el-row>
+                                        <el-form-item>
+                                            <el-button
+                                                type="warning"
+                                                @click="loadSDESData"
+                                                :loading="isLoading"
+                                                icon="el-icon-download"
+                                                style="margin-right: 15px; border-radius: 6px; font-weight: 600;"
+                                            >读取加密数据</el-button>
+                                            <el-button
+                                                type="danger"
+                                                @click="attackSDES"
+                                                :loading="isAttacking"
+                                                :disabled="!sdesAttackData.plaintext1"
+                                                icon="el-icon-cpu"
+                                                style="border-radius: 6px; font-weight: 600; box-shadow: 0 2px 8px rgba(245, 108, 108, 0.3);"
+                                            >开始攻击</el-button>
+                                        </el-form-item>
+                                    </el-form>
                                 </div>
 
                                 <!-- SDES 方案对比操作区域 -->
@@ -443,7 +473,9 @@
                                                 :rows="3"
                                                 :placeholder="'输入明文（分组长度: ' + cryptoParams.blockSize + ')'"
                                                 style="border-radius: 6px;"
-                                            ></el-input>
+                                            >
+                                                <el-button slot="append" @click="generateSM4Random('plaintext')" icon="el-icon-refresh">随机生成</el-button>
+                                            </el-input>
                                         </el-form-item>
                                         <el-form-item label="秘钥">
                                             <el-input
@@ -451,7 +483,9 @@
                                                 :show-password="true"
                                                 placeholder="输入秘钥"
                                                 style="border-radius: 6px;"
-                                            ></el-input>
+                                            >
+                                                <el-button slot="append" @click="generateSM4Random('key')" icon="el-icon-refresh">随机生成</el-button>
+                                            </el-input>
                                         </el-form-item>
                                         <el-form-item>
                                             <el-button
@@ -567,6 +601,7 @@
                                                         :rows="3"
                                                         :placeholder="'请输入已知明文用于攻击（分组长度: ' + cryptoParams.blockSize + ')'"
                                                         style="border-radius: 6px;"
+                                                        readonly
                                                     ></el-input>
                                                 </el-form-item>
                                             </el-col>
@@ -578,22 +613,27 @@
                                                         :rows="3"
                                                         placeholder="请输入对应的密文"
                                                         style="border-radius: 6px;"
+                                                        readonly
                                                     ></el-input>
                                                 </el-form-item>
                                             </el-col>
                                         </el-row>
                                         <el-form-item>
-                                            <div style="text-align: center; margin-top: 20px;">
-                                                <el-button
-                                                    type="danger"
-                                                    @click="attackCipher"
-                                                    :loading="isAttacking"
-                                                    style="padding: 15px 40px; font-size: 16px; font-weight: 600; border-radius: 8px; box-shadow: 0 4px 12px rgba(245, 108, 108, 0.4);"
-                                                >
-                                                    <i class="el-icon-lock" style="margin-right: 8px;"></i>
-                                                    开始攻击
-                                                </el-button>
-                                            </div>
+                                            <el-button
+                                                type="warning"
+                                                @click="loadSM4Data"
+                                                :loading="isLoading"
+                                                icon="el-icon-download"
+                                                style="margin-right: 15px; border-radius: 6px; font-weight: 600;"
+                                            >读取加密数据</el-button>
+                                            <el-button
+                                                type="danger"
+                                                @click="attackCipher"
+                                                :loading="isAttacking"
+                                                :disabled="!cryptoParams.plaintext"
+                                                icon="el-icon-cpu"
+                                                style="border-radius: 6px; font-weight: 600; box-shadow: 0 2px 8px rgba(245, 108, 108, 0.3);"
+                                            >开始攻击</el-button>
                                         </el-form-item>
                                     </el-form>
                                 </div>
@@ -839,8 +879,10 @@
             );
           },
           hasAttackResults() {
-            return ['des_attack', 'sm4_attack'].includes(this.activeFunction) &&
-                   ['secretKey', 'rate', 'averageCalls'].some(key => this.results[key]);
+            return (['des_attack', 'sm4_attack'].includes(this.activeFunction) &&
+                   ['secretKey', 'rate', 'averageCalls'].some(key => this.results[key])) ||
+                   (this.activeFunction === 'des_attack' && this.activeSubFunction === 'sdes_attack' &&
+                   ['secretKey', 'rate', 'averageCalls'].some(key => this.results[key]));
           },
         },
         methods: {
@@ -903,17 +945,15 @@
                 initialParams: parseInt(this.params.lpn.initialParams)
               }),
               'generating',
-              'LPN问题生成完成！参数已写入文件。',
+              'LPN问题生成完成！',
               '生成失败: '
             );
             
-            if (response) {
-              const result = QuantumDataProcessor.formatResult(response, {
-                time: '2.45s',
-                rate: '95.8%',
-                solve: '生成完成'
-              });
-              Object.assign(this.results, result);
+            if (response && response.success) {
+              // 按照新格式显示结果
+              this.results.solve = response.data.solution || response.data.solutionPreview;
+              this.results.rate = (parseFloat(response.data.probability) * 100).toFixed(2) + '%';
+              this.results.time = response.data.executionTime;
             }
           },
           
@@ -925,13 +965,11 @@
               '求解失败: '
             );
             
-            if (response) {
-              const result = QuantumDataProcessor.formatResult(response, {
-                time: '4.73s',
-                rate: '98.2%',
-                solve: '求解完成'
-              });
-              Object.assign(this.results, result);
+            if (response && response.success) {
+              // 按照新格式显示结果
+              this.results.solve = response.data.solution || response.data.solutionPreview;
+              this.results.rate = (parseFloat(response.data.probability) * 100).toFixed(2) + '%';
+              this.results.time = response.data.executionTime;
             }
           },
           // 加密相关方法
@@ -1008,7 +1046,23 @@
                   ciphertext2: this.cryptoParams.ciphertext2
                 });
               } else if (this.activeSubFunction === 'sm4_attack_part') {
-                // SM4攻击：使用后端API进行SM4攻击
+                // SM4攻击：先读取加密文件，然后调用攻击
+                const readResponse = await fetch(`${window.API_CONFIG.BASE_URL}/api/quantum/files/sm4/output_${this.cryptoParams.blockSize}.txt`);
+                
+                if (readResponse.ok) {
+                  const readResult = await readResponse.json();
+                  if (readResult.success) {
+                    const lines = readResult.data.content.trim().split('\n');
+                    if (lines.length >= 2) {
+                      // 显示读取的明密文对
+                      this.params.crypto.plaintext = lines[0];
+                      this.params.crypto.ciphertext = lines[1];
+                      this.$message.info(`已读取明密文对：明文=${lines[0]}, 密文=${lines[1]}`);
+                    }
+                  }
+                }
+                
+                // 执行攻击
                 response = await fetch(window.API_CONFIG.BASE_URL + '/api/quantum/sm4/attack', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
@@ -1067,50 +1121,29 @@
             this.clearResults();
           },
           
+          // 随机生成方法
           async generateSDESRandom(type) {
-            const randomBits = await this.handleRandomGeneration(
-              'sdes',
-              { type: type === 'key' ? 'key' : 'plaintext' },
-              type === 'key' ? 10 : 8
-            );
-            if (randomBits) {
-              this.params.sdes[type] = randomBits;
-            }
-          },
-          
-          async generateSM4Random(type) {
-            const randomBits = await this.handleRandomGeneration(
-              'sm4',
-              { blockSize: this.params.crypto.blockSize },
-              this.params.crypto.blockSize
-            );
-            if (randomBits) {
-              this.params.crypto[type] = randomBits;
-            }
-          },
-          
-          // SDES加密相关方法
-          async encryptSDES() {
-            const validation = QuantumValidators.validateSDESParams(this.params.sdes);
-            if (!validation.valid) {
-              this.$message.warning(validation.message);
-              return;
-            }
-            
-            const response = await this.handleRequest(
-              () => QuantumAPIHelper.encryptSDES(this.params.sdes),
-              'encrypting',
-              'SDES加密完成！',
-              '加密失败: '
-            );
-            
-            if (response) {
-              Object.assign(this.params.sdes, {
-                ciphertext1: response.data.ciphertext1,
-                ciphertext2: response.data.ciphertext2
+            try {
+              const response = await fetch(window.API_CONFIG.BASE_URL + '/api/quantum/sdes/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: type === 'key' ? 'key' : 'plaintext' })
               });
+              
+              const result = await response.json();
+              if (result.success) {
+                this.sdesParams[type] = result.data.randomBits;
+                this.$message.success(`随机生成${type === 'key' ? '10' : '8'}位数据成功`);
+              }
+            } catch (error) {
+              // 回退到本地生成
+              const bitLength = type === 'key' ? 10 : 8;
+              const randomBits = Array.from({length: bitLength}, () => Math.random() < 0.5 ? '0' : '1').join('');
+              this.sdesParams[type] = randomBits;
+              this.$message.success(`本地随机生成${bitLength}位数据成功`);
             }
           },
+          
           async generateSM4Random(type) {
             try {
               const response = await fetch(window.API_CONFIG.BASE_URL + '/api/quantum/sm4/generate', {
@@ -1140,58 +1173,30 @@
               this.$message.success(`本地随机生成${this.cryptoParams.blockSize}位数据成功`);
             }
           },
+          
+          // SDES加密相关方法
           async encryptSDES() {
-            // 验证输入
-            if (!this.sdesParams.plaintext1 || !this.sdesParams.plaintext2 || !this.sdesParams.key) {
-              this.$message.warning('请输入完整的明文和密钥');
+            const validation = QuantumValidators.validateSDESParams(this.params.sdes);
+            if (!validation.valid) {
+              this.$message.warning(validation.message);
               return;
             }
             
-            // 验证位数
-            if (this.sdesParams.plaintext1.length !== 8 || this.sdesParams.plaintext2.length !== 8) {
-              this.$message.error('明文长度必须为8位');
-              return;
-            }
+            const response = await this.handleRequest(
+              () => QuantumAPIHelper.encryptSDES(this.params.sdes),
+              'encrypting',
+              'SDES加密完成！',
+              '加密失败: '
+            );
             
-            if (this.sdesParams.key.length !== 10) {
-              this.$message.error('密钥长度必须为10位');
-              return;
-            }
-            
-            // 验证是否为01比特串
-            const bitPattern = /^[01]+$/;
-            if (!bitPattern.test(this.sdesParams.plaintext1) || !bitPattern.test(this.sdesParams.plaintext2) || !bitPattern.test(this.sdesParams.key)) {
-              this.$message.error('明文和密钥必须为01比特串');
-              return;
-            }
-            
-            this.isEncrypting = true;
-            
-            try {
-              const response = await fetch(window.API_CONFIG.BASE_URL + '/api/quantum/sdes/encrypt', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  plaintext1: this.sdesParams.plaintext1,
-                  plaintext2: this.sdesParams.plaintext2,
-                  key: this.sdesParams.key
-                })
+            if (response) {
+              Object.assign(this.params.sdes, {
+                ciphertext1: response.data.ciphertext1,
+                ciphertext2: response.data.ciphertext2
               });
-              
-              const result = await response.json();
-              if (result.success) {
-                this.sdesParams.ciphertext1 = result.data.ciphertext1;
-                this.sdesParams.ciphertext2 = result.data.ciphertext2;
-                this.$message.success('SDES加密完成！');
-              } else {
-                this.$message.error('加密失败: ' + result.error);
-              }
-            } catch (error) {
-              this.$message.error('加密异常: ' + error.message);
-            } finally {
-              this.isEncrypting = false;
             }
           },
+
           async loadSDESData() {
             this.isLoading = true;
             
@@ -1201,6 +1206,7 @@
               if (response.success) {
                 const lines = response.data.content.trim().split('\n');
                 if (lines.length >= 4) {
+                  // 按照SDES加密的四行格式：明文1、明文2、密文1、密文2
                   this.sdesAttackData.plaintext1 = lines[0];
                   this.sdesAttackData.plaintext2 = lines[1];
                   this.sdesAttackData.ciphertext1 = lines[2];
@@ -1211,6 +1217,33 @@
                 }
               } else {
                 this.$message.error('未找到加密数据文件，请先执行加密操作');
+              }
+            } catch (error) {
+              this.$message.error('加载数据异常: ' + error.message);
+            } finally {
+              this.isLoading = false;
+            }
+          },
+          async loadSM4Data() {
+            this.isLoading = true;
+            
+            try {
+              // 根据分组长度读取对应的输出文件
+              const filename = `output_${this.cryptoParams.blockSize}.txt`;
+              const response = await window.QuantumAPI.readFile('sm4', filename);
+              
+              if (response.success) {
+                const lines = response.data.content.trim().split('\n');
+                if (lines.length >= 2) {
+                  // 按照SM4加密的两行格式：明文、密文
+                  this.cryptoParams.plaintext = lines[0];
+                  this.cryptoParams.ciphertext = lines[1];
+                  this.$message.success('加密数据加载成功！');
+                } else {
+                  this.$message.error('加密数据文件格式错误');
+                }
+              } else {
+                this.$message.error(`未找到分组长度${this.cryptoParams.blockSize}的加密数据文件，请先执行加密操作`);
               }
             } catch (error) {
               this.$message.error('加载数据异常: ' + error.message);
@@ -1229,6 +1262,7 @@
               
               const result = await response.json();
               if (result.success) {
+                // 按照攻击结果格式显示：密钥、概率、平均调用次数
                 this.results.secretKey = result.data.recoveredKey;
                 this.results.rate = (parseFloat(result.data.probability) * 100).toFixed(2) + '%';
                 this.results.averageCalls = result.data.averageCalls + '次';

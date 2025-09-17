@@ -19,36 +19,30 @@ class LPNService {
   static async generate(params) {
     const { paramCount, equationCount, errorRate, initialParams } = params;
 
-    // 构建输入内容
+    // 构建输入内容 - 按需求格式每行一个值
     const inputContent = [
-      `paramCount=${paramCount}`,
-      `equationCount=${equationCount}`,
-      `errorRate=${errorRate}`,
-      `initialParams=${initialParams}`,
-      `timestamp=${Date.now()}`,
-      `type=generate_lpn`,
+      paramCount.toString(),
+      equationCount.toString(),
+      errorRate.toString(),
+      initialParams.toString(),
     ].join("\n");
 
-    // 写入输入文件
+    // 写入输入文件到 /lpn/input_gen.txt
     const inputFile = getFilePath("lpn", config.files.lpn.input);
     await writeFile(inputFile, inputContent);
 
-    // 模拟执行
+    // 模拟LPN执行
     await delay(2000);
 
-    // 生成结果
-    const solution = generateLPNSolution(paramCount);
-    const result = generateSimulatedResult("lpn");
+    // 生成结果 - 按需求格式写入 /lpn/output.txt
+    const solution = generateLPNSolution(paramCount); // 生成01比特串
+    const probability = (0.7 + Math.random() * 0.25).toFixed(4); // 相应概率（浮点数）
+    const executionTime = (1.5 + Math.random() * 3).toFixed(2); // 运行时间（浮点数）
 
     const outputContent = [
-      `execution_time=${result.executionTime}`,
-      `success_rate=${result.successRate}`,
-      `solution_type=generated`,
-      `variable_count=${paramCount}`,
-      `equation_count=${equationCount}`,
-      `error_rate=${errorRate}`,
-      `solution_data=${solution}`,
-      `timestamp=${result.timestamp}`,
+      solution, // 第一行：所得的解（01比特串）
+      probability, // 第二行：相应概率（浮点数）
+      executionTime, // 第三行：运行时间（浮点数）
     ].join("\n");
 
     // 写入输出文件
@@ -58,38 +52,55 @@ class LPNService {
     return {
       inputFile,
       outputFile,
-      executionTime: result.executionTime,
-      successRate: result.successRate,
-      solutionPreview: solution.substring(0, 200) + "...",
+      solution,
+      probability,
+      executionTime: executionTime + "s",
+      solutionPreview: solution.substring(0, 100) + "...",
     };
   }
 
   static async solve() {
+    // 读取LPN输出文件
+    const outputFile = getFilePath("lpn", config.files.lpn.output);
+
+    if (!(await fs.pathExists(outputFile))) {
+      throw new Error("未找到LPN问题生成结果文件，请先执行生成操作");
+    }
+
     await delay(3000);
 
-    const solution = generateLPNSolution(100);
-    const result = generateSimulatedResult("lpn");
+    try {
+      const content = await readFile(outputFile);
+      const lines = content.trim().split("\n");
 
-    const outputContent = [
-      `execution_time=${result.executionTime}`,
-      `success_rate=${result.successRate}`,
-      `solution_type=solved`,
-      `variable_count=100`,
-      `equation_count=150`,
-      `error_rate=0.1`,
-      `solution_data=${solution}`,
-      `timestamp=${result.timestamp}`,
-    ].join("\n");
+      if (lines.length < 3) {
+        throw new Error("LPN结果文件格式错误");
+      }
 
-    const outputFile = getFilePath("lpn", config.files.lpn.output);
-    await writeFile(outputFile, outputContent);
+      const [solution, probability, executionTime] = lines;
 
-    return {
-      outputFile,
-      executionTime: result.executionTime,
-      successRate: result.successRate,
-      solutionPreview: solution.substring(0, 200) + "...",
-    };
+      return {
+        outputFile,
+        solution,
+        probability: parseFloat(probability),
+        executionTime: parseFloat(executionTime) + "s",
+        solutionPreview: solution,
+      };
+    } catch (error) {
+      console.error("读取LPN结果文件失败:", error);
+      // 如果读取失败，返回默认结果
+      const solution = generateLPNSolution(100);
+      const probability = (0.7 + Math.random() * 0.25).toFixed(4);
+      const executionTime = (2.5 + Math.random() * 2).toFixed(2);
+
+      return {
+        outputFile,
+        solution,
+        probability: parseFloat(probability),
+        executionTime: executionTime + "s",
+        solutionPreview: solution,
+      };
+    }
   }
 }
 
@@ -274,37 +285,44 @@ class SM4Service {
   static async encrypt(params) {
     const { plaintext, key, blockSize } = params;
 
+    // 验证分组长度
     if (
       !config.algorithms.sm4.allowedBlockSizes.includes(parseInt(blockSize))
     ) {
       throw new Error("分组长度必须为8或16");
     }
 
+    // 验证位数是否正确
+    if (plaintext.length !== blockSize || key.length !== blockSize) {
+      throw new Error(`明文和密钥长度必须都为${blockSize}位`);
+    }
+
+    // 验证是否为01比特串
+    const bitPattern = /^[01]+$/;
+    if (!bitPattern.test(plaintext) || !bitPattern.test(key)) {
+      throw new Error("明文和密钥必须为01比特串");
+    }
+
+    // 写入输入文件 - 明文第一行，密钥第二行
+    const inputContent = `${plaintext}\n${key}`;
+    const inputFile = getFilePath("sm4", config.files.sm4.input(blockSize));
+    await writeFile(inputFile, inputContent);
+
     await delay(1000);
 
-    // 生成密文
-    const ciphertext = `[SM4加密-分组${blockSize}] ${Buffer.from(
-      plaintext + "|" + key + "|" + blockSize
-    )
-      .toString("base64")
-      .replace(/=/g, "")}`;
+    // 生成密文（简单异或加密）
+    let ciphertext = "";
+    for (let i = 0; i < blockSize; i++) {
+      ciphertext += (parseInt(plaintext[i]) ^ parseInt(key[i])).toString();
+    }
 
-    // 写入文件
-    const inputData = { plaintext, key, blockSize, timestamp: Date.now() };
-    const outputData = {
-      ciphertext,
-      algorithm: "SM4",
-      blockSize,
-      timestamp: Date.now(),
-    };
-
-    const inputFile = getFilePath("sm4", config.files.sm4.input(blockSize));
+    // 写入输出文件 - 第一行明文，第二行密文
+    const outputContent = `${plaintext}\n${ciphertext}`;
     const outputFile = getFilePath("sm4", config.files.sm4.output(blockSize));
-
-    await writeFile(inputFile, inputData, "json");
-    await writeFile(outputFile, outputData, "json");
+    await writeFile(outputFile, outputContent);
 
     return {
+      plaintext,
       ciphertext,
       blockSize,
       inputFile,
@@ -313,41 +331,69 @@ class SM4Service {
   }
 
   static async attack(params) {
-    const { plaintext, ciphertext, blockSize } = params;
+    const { blockSize } = params;
 
-    await delay(4000);
-
-    const result = generateSimulatedResult("sm4");
-    let attackResult;
-
-    if (result.success) {
-      attackResult = {
-        success: true,
-        secretKey: generateSimulatedKey(Math.floor(Math.random() * 200 + 100)),
-        executionTime: result.executionTime,
-        successRate: result.successRate,
-        averageCalls: Math.floor(Math.random() * 1000 + 500) + "次",
-        recoveredPlaintext: plaintext,
-        blockSize,
-      };
-    } else {
-      attackResult = {
-        success: false,
-        executionTime: result.executionTime,
-        successRate: "0%",
-        averageCalls: Math.floor(Math.random() * 2000 + 1000) + "次",
-        error: config.messages.error.attackFailed,
-        blockSize,
-      };
+    // 验证分组长度
+    if (
+      !config.algorithms.sm4.allowedBlockSizes.includes(parseInt(blockSize))
+    ) {
+      throw new Error("分组长度必须为8或16");
     }
 
-    const outputFile = getFilePath(
-      "sm4",
-      config.files.sm4.attack_result(blockSize)
-    );
-    await writeFile(outputFile, attackResult, "json");
+    // 读取对应的输出文件
+    const outputFile = getFilePath("sm4", config.files.sm4.output(blockSize));
 
-    return attackResult;
+    if (!(await fs.pathExists(outputFile))) {
+      throw new Error(`未找到SM4加密结果文件，请先执行加密操作`);
+    }
+
+    try {
+      const content = await readFile(outputFile);
+      const lines = content.trim().split("\n");
+
+      if (lines.length < 2) {
+        throw new Error("SM4加密结果文件格式错误");
+      }
+
+      const [plaintext, ciphertext] = lines;
+
+      await delay(4000);
+
+      // 模拟攻击过程 - 使用异或恢复密钥
+      let recoveredKey = "";
+      for (let i = 0; i < blockSize; i++) {
+        recoveredKey += (
+          parseInt(plaintext[i]) ^ parseInt(ciphertext[i])
+        ).toString();
+      }
+
+      const probability = (0.75 + Math.random() * 0.2).toFixed(4);
+      const averageCalls = Math.floor(Math.random() * 1000 + 500);
+
+      // 写入攻击结果到 /sm4/output.txt
+      const attackResultContent = [
+        recoveredKey, // 第一行：密钥（01比特串）
+        probability, // 第二行：相应概率
+        averageCalls.toString(), // 第三行：平均调用次数
+      ].join("\n");
+
+      const attackOutputFile = getFilePath("sm4", "output.txt");
+      await writeFile(attackOutputFile, attackResultContent);
+
+      return {
+        success: true,
+        plaintext,
+        ciphertext,
+        secretKey: recoveredKey,
+        probability: parseFloat(probability),
+        averageCalls,
+        blockSize,
+        outputFile: attackOutputFile,
+      };
+    } catch (error) {
+      console.error("读取SM4结果文件失败:", error);
+      throw new Error("读取SM4加密结果失败: " + error.message);
+    }
   }
 
   static generateRandom(blockSize) {

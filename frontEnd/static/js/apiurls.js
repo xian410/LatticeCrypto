@@ -26,10 +26,19 @@ const API_URLS = {
     ATTACK: "/api/quantum/des/attack",
   },
 
+  // SDES相关接口
+  SDES: {
+    ENCRYPT: "/api/quantum/sdes/encrypt",
+    ATTACK: "/api/quantum/sdes/attack",
+    COMPARISON: "/api/quantum/sdes/comparison",
+    GENERATE: "/api/quantum/sdes/generate",
+  },
+
   // SM4相关接口
   SM4: {
     ENCRYPT: "/api/quantum/sm4/encrypt",
     ATTACK: "/api/quantum/sm4/attack",
+    GENERATE: "/api/quantum/sm4/generate",
   },
 
   // 文件操作接口
@@ -146,6 +155,21 @@ const QuantumAPI = {
   // SM4攻击
   async attackSM4(params, options = {}) {
     return makeApiRequest("POST", API_URLS.SM4.ATTACK, params, options);
+  },
+
+  // SDES加密
+  async encryptSDES(params, options = {}) {
+    return makeApiRequest("POST", API_URLS.SDES.ENCRYPT, params, options);
+  },
+
+  // SDES攻击
+  async attackSDES(options = {}) {
+    return makeApiRequest("POST", API_URLS.SDES.ATTACK, null, options);
+  },
+
+  // SDES方案对比
+  async compareSDES(params, options = {}) {
+    return makeApiRequest("POST", API_URLS.SDES.COMPARISON, params, options);
   },
 
   // 读取文件

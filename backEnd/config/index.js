@@ -88,7 +88,7 @@ function getDataPath(category = "") {
 function getFilePath(category, filename) {
   // quantum模块的特殊处理
   if (["lpn", "sdes", "sm4"].includes(category)) {
-    return path.join(getDataPath("quantum"), filename);
+    return path.join(getDataPath(category), filename);
   }
 
   // 其他模块使用对应的目录

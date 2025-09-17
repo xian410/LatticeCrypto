@@ -173,21 +173,17 @@ router.post(
   }
 );
 
-router.post(
-  "/sm4/attack",
-  validateParams(["plaintext", "ciphertext", "blockSize"]),
-  async (req, res) => {
-    try {
-      const data = await SM4Service.attack(req.body);
-      const message = data.success
-        ? `${config.messages.success.sm4Attack}，分组长度: ${data.blockSize}`
-        : "SM4攻击失败";
-      handleResponse(res, "SM4攻击", data, message);
-    } catch (error) {
-      handleError(res, error, "SM4攻击");
-    }
+router.post("/sm4/attack", async (req, res) => {
+  try {
+    const data = await SM4Service.attack(req.body);
+    const message = data.success
+      ? `${config.messages.success.sm4Attack}，分组长度: ${data.blockSize}`
+      : "SM4攻击失败";
+    handleResponse(res, "SM4攻击", data, message);
+  } catch (error) {
+    handleError(res, error, "SM4攻击");
   }
-);
+});
 
 router.post(
   "/sm4/generate",
